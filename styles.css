@@ -133,6 +133,8 @@ h1 {
     flex-direction: column;
     gap: 1.8rem;
     box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
 }
 
 .filter-group-title {
