@@ -2796,5 +2796,161 @@ function setupRoiCalculator() {
     calculateRoi();
 }
 
+// Custom CSV Parser to handle sheets exports
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/);
+    if (lines.length < 2) return fallbackCourses;
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const parsed = [];
+
+    for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+
+        const row = [];
+        let inQuotes = false;
+        let currentValue = '';
+
+        for (let j = 0; j < lines[i].length; j++) {
+            const char = lines[i][j];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                row.push(currentValue.trim());
+                currentValue = '';
+            } else {
+                currentValue += char;
+            }
+        }
+        row.push(currentValue.trim());
+
+        const course = {};
+        headers.forEach((header, idx) => {
+            let val = row[idx] || '';
+
+            if (val.startsWith('"') && val.endsWith('"')) {
+                val = val.substring(1, val.length - 1);
+            }
+
+            if (header === 'cost' || header === 'durationweeks' || header === 'reviewscount' || header === 'otp' || header === 'emi' || header.startsWith('sem')) {
+                course[header] = parseInt(val) || 0;
+            } else if (header === 'discountpercent' || header === 'rating') {
+                course[header] = parseFloat(val) || 0;
+            } else if (header === 'careersupport') {
+                course[header] = val.toLowerCase() === 'true';
+            } else if (header === 'syllabus' || header === 'approvals') {
+                course[header] = val ? val.split(';').map(item => item.trim()) : [];
+            } else {
+                if (header === 'durationweeks') course['durationWeeks'] = parseInt(val) || 0;
+                else if (header === 'discountpercent') course['discountPercent'] = parseFloat(val) || 0;
+                else if (header === 'reviewscount') course['reviewsCount'] = parseInt(val) || 0;
+                else if (header === 'careersupport') course['careerSupport'] = val.toLowerCase() === 'true';
+                else if (header === 'brochureurl') course['brochureUrl'] = val;
+                else if (header === 'exampattern') course['examPattern'] = val;
+                else if (header === 'imagecolor') course['imageColor'] = val;
+                else course[header] = val;
+            }
+        });
+
+        if (course.durationweeks !== undefined) course.durationWeeks = course.durationweeks;
+        if (course.discountpercent !== undefined) course.discountPercent = course.discountpercent;
+        if (course.reviewscount !== undefined) course.reviewsCount = course.reviewscount;
+        if (course.careersupport !== undefined) course.careerSupport = course.careersupport;
+        if (course.brochureurl !== undefined) course.brochureUrl = course.brochureurl;
+
+        parsed.push(course);
+    }
+    return parsed.length ? parsed : fallbackCourses;
+}
+
+// Initializer
+async function init() {
+    try {
+        if (GOOGLE_SHEET_CSV_URL) {
+            const response = await fetch(GOOGLE_SHEET_CSV_URL);
+            if (response.ok) {
+                const text = await response.text();
+                const fetchedCourses = parseCSV(text);
+                if (fetchedCourses && fetchedCourses.length > 0) {
+                    courses = fetchedCourses;
+                } else {
+                    courses = fallbackCourses;
+                }
+            } else {
+                courses = fallbackCourses;
+            }
+        } else {
+            courses = fallbackCourses;
+        }
+    } catch (err) {
+        console.warn('Failed to fetch live Google Sheets data, using fallback seed data:', err);
+        courses = fallbackCourses;
+    }
+
+    const universityApprovalsMap = {
+        'ADTU (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF', 'AICTE'],
+        'Alliance (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF', 'AACSB'],
+        'Amrita (Online)': ['UGC-DEB', 'NAAC A++', 'NIRF Top 10', 'WES'],
+        'Andhra (Online)': ['UGC-DEB', 'NAAC A', 'NIRF'],
+        'AU (Online)': ['UGC-DEB', 'NAAC A+'],
+        'Bennett (Online)': ['UGC-DEB', 'NIRF', 'AICTE'],
+        'BITS Pilani (WILP)': ['UGC-DEB', 'NIRF Top 20', 'AICTE', 'WES'],
+        'Chandigarh University (Online)': ['UGC-DEB', 'NAAC A+', 'QS Ranked', 'WES'],
+        'Datta Meghe (Online)': ['UGC-DEB', 'NAAC A+'],
+        'DPU (Online)': ['UGC-DEB', 'NAAC A++', 'AICTE'],
+        'GLA (Online)': ['UGC-DEB', 'NAAC A+'],
+        'Graphic Era (Online)': ['UGC-DEB', 'NAAC A+'],
+        'IGNOU': ['UGC-DEB', 'AICTE', 'WES'],
+        'IIM Ahmedabad': ['AACSB', 'EQUIS', 'NIRF #1'],
+        'IIM Kozhikode': ['AMBA', 'EQUIS', 'NIRF Top 5'],
+        'IIT Madras': ['NIRF #1', 'AICTE'],
+        'IIT Roorkee': ['NIRF Top 10', 'AICTE'],
+        'Jain (Online)': ['UGC-DEB', 'NAAC A++', 'WES', 'AICTE'],
+        'Jaypee (Online)': ['UGC-DEB', 'NAAC A+'],
+        'KL (Online)': ['UGC-DEB', 'NAAC A++'],
+        'LPU (Online)': ['UGC-DEB', 'NAAC A++', 'WES', 'NIRF'],
+        'Manipal (Online)': ['UGC-DEB', 'NAAC A+', 'WES', 'AICTE'],
+        'NMIMS (Online)': ['UGC-DEB', 'NAAC A+', 'Autonomy Cat I', 'WES'],
+        'Sathyabama (Online)': ['UGC-DEB', 'NAAC A++'],
+        'Sharda (Online)': ['UGC-DEB', 'NAAC A+'],
+        'Shiv Nadar (Online)': ['UGC-DEB', 'NIRF'],
+        'SRM (Online)': ['UGC-DEB', 'NAAC A++', 'QS Ranked'],
+        'Symbiosis (SSODL)': ['UGC-DEB', 'NAAC A++', 'WES', 'AICTE'],
+        'UPES (Online)': ['UGC-DEB', 'NAAC A', 'IACBE'],
+        'Vignan (Online)': ['UGC-DEB', 'NAAC A+']
+    };
+
+    courses.forEach(course => {
+        if (!course.approvals || course.approvals.length === 0) {
+            let mappedApprovals = universityApprovalsMap[course.university];
+            if (!mappedApprovals && course.university && course.university.toLowerCase().includes('amity')) {
+                mappedApprovals = ['UGC-DEB', 'NAAC A+', 'NIRF', 'AICTE', 'WES'];
+            }
+            course.approvals = mappedApprovals || ['UGC', 'AICTE', 'WES'];
+        }
+
+        if (!course.examPattern) {
+            const patterns = ["Online Proctored", "Center Based", "Assignment Based"];
+            course.examPattern = patterns[(course.title || 'default').length % patterns.length];
+        }
+
+        if (course.otp === undefined) course.otp = 5000;
+        if (course.emi === undefined) course.emi = Math.round((course.cost * 1.1) / (course.durationWeeks > 104 ? 36 : 24));
+        const numSems = course.level === 'UG' ? 6 : 4;
+        const semFee = Math.round((course.cost - course.otp) / numSems);
+        for (let i = 1; i <= 6; i++) {
+            if (i <= numSems && course[`sem${i}`] === undefined) course[`sem${i}`] = semFee;
+            else if (course[`sem${i}`] === undefined) course[`sem${i}`] = 0;
+        }
+    });
+
+    updateDashboardStats();
+    renderFilterCheckboxes();
+    renderActiveFilterChips();
+    renderCourses();
+    setupEventListeners();
+}
+
 // Execute Init
 document.addEventListener('DOMContentLoaded', init);
+
