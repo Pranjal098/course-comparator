@@ -888,12 +888,6 @@ h1 {
 
 /* Responsive design */
 @media (max-width: 900px) {
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
-    .filters-sidebar {
-        position: static;
-    }
     .compare-tray {
         width: 90%;
         flex-direction: column;
@@ -907,4 +901,41 @@ h1 {
     .roi-controls {
         grid-template-columns: 1fr;
     }
+}
+
+.quick-compare-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    transition: var(--transition-bounce);
+}
+
+.quick-compare-item:hover {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+    transform: translateX(5px);
+}
+
+.quick-add-btn {
+    background: var(--primary);
+    color: var(--bg-dark);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.quick-add-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--primary);
 }

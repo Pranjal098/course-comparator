@@ -2127,6 +2127,72 @@ function setupEventListeners() {
             }
         });
     }
+
+    setupQuickCompare();
+}
+
+// --- Quick Compare Modal Logic ---
+function setupQuickCompare() {
+    const quickCompareBtn = document.getElementById('quick-compare-btn');
+    const quickModal = document.getElementById('quick-compare-modal');
+    const closeQuickBtn = document.getElementById('close-quick-compare-btn');
+    const searchInput = document.getElementById('quick-compare-search');
+    const resultsContainer = document.getElementById('quick-compare-results');
+
+    if (!quickCompareBtn || !quickModal) return;
+
+    function renderQuickResults(query = '') {
+        const lowerQuery = query.toLowerCase();
+        const filtered = courses.filter(c => 
+            c.university.toLowerCase().includes(lowerQuery) || 
+            c.title.toLowerCase().includes(lowerQuery)
+        );
+
+        resultsContainer.innerHTML = filtered.map(course => {
+            const isAdded = selectedCourses.some(sc => sc.id === course.id);
+            return \`
+                <div class="quick-compare-item">
+                    <div>
+                        <div style="font-weight:700; color:var(--primary); font-size:0.9rem;">\${course.university}</div>
+                        <div style="font-size:0.85rem; color:#fff;">\${course.title}</div>
+                    </div>
+                    <button class="quick-add-btn" data-id="\${course.id}" style="\${isAdded ? 'background:var(--accent); color:#fff;' : ''}">
+                        \${isAdded ? '✓' : '+'}
+                    </button>
+                </div>
+            \`;
+        }).join('');
+
+        // Attach click listeners to the + buttons
+        resultsContainer.querySelectorAll('.quick-add-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                toggleCompareCourse(id);
+                renderQuickResults(searchInput.value); // Re-render to update the ✓ state
+            });
+        });
+    }
+
+    quickCompareBtn.addEventListener('click', () => {
+        quickModal.style.display = 'flex';
+        searchInput.value = '';
+        renderQuickResults();
+        searchInput.focus();
+    });
+
+    closeQuickBtn.addEventListener('click', () => {
+        quickModal.style.display = 'none';
+    });
+
+    quickModal.addEventListener('click', (e) => {
+        if (e.target === quickModal) {
+            quickModal.style.display = 'none';
+        }
+    });
+
+    searchInput.addEventListener('input', (e) => {
+        renderQuickResults(e.target.value);
+    });
 }
 
 // Open comparison modal
