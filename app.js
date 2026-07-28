@@ -1914,14 +1914,15 @@ function renderCourses() {
         return;
     }
 
-    coursesGrid.innerHTML = filtered.map(course => {
+    coursesGrid.innerHTML = filtered.map((course, index) => {
         const isAdded = selectedCourses.some(c => c.id === course.id);
         const hasDiscount = course.discountPercent > 0;
         const originalCost = course.cost;
         const finalCost = getEffectiveCost(course);
+        const animDelay = (index * 0.05).toFixed(2);
 
         return `
-            <div class="course-card" data-id="${course.id}">
+            <div class="course-card" data-id="${course.id}" style="animation-delay: ${animDelay}s;">
                 <div class="card-banner" style="background: ${course.imageColor || 'linear-gradient(135deg, #1f2937, #111827)'}">
                     <span class="univ-badge">${course.university}</span>
                     <span class="level-badge ${course.level ? course.level.toLowerCase() : 'ug'}">${course.level}</span>
