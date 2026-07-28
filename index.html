@@ -32,16 +32,24 @@
     <!-- Dashboard Layout -->
     <main class="dashboard">
         
-        <!-- Filter Sidebar -->
-        <aside class="filters-sidebar">
-            <!-- Search -->
-            <div>
-                <h4 class="filter-group-title">Search Programs</h4>
-                <div class="search-input-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" placeholder="Search by name, univ, subject...">
-                </div>
+        <div class="top-action-bar">
+            <div class="search-input-wrapper" style="flex-grow:1; max-width:600px;">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="Search by name, university, subject..." style="width:100%;">
             </div>
+            <button id="toggle-filters-btn" class="compare-btn" style="background:var(--bg-card); backdrop-filter:blur(10px); padding:0.8rem 1.5rem;">
+                <span style="font-size:1rem;">⚙️ Filter & Refine</span>
+            </button>
+        </div>
+
+        <!-- Filter Overlay -->
+        <div class="drawer-overlay" id="filter-drawer">
+            <!-- Filter Sidebar -->
+            <aside class="filters-sidebar">
+                <div class="drawer-header">
+                    <h3 style="font-family:var(--font-heading); font-size:1.5rem; color:var(--primary);">Refine Results</h3>
+                    <button id="close-filters-btn" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:35px; height:35px; color:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:var(--transition);">&times;</button>
+                </div>
 
             <!-- Program Level -->
             <div>
@@ -111,6 +119,7 @@
                 </div>
             </div>
         </aside>
+        </div>
 
         <!-- Main Panel -->
         <section class="main-panel">

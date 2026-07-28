@@ -2106,6 +2106,27 @@ function setupEventListeners() {
     comparisonModal.addEventListener('click', (e) => {
         if (e.target === comparisonModal) closeComparisonModal();
     });
+
+    // Mobile/Universal Drawer Toggle
+    const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
+    const filterDrawer = document.getElementById('filter-drawer');
+    const closeFiltersBtn = document.getElementById('close-filters-btn');
+
+    if (toggleFiltersBtn && filterDrawer) {
+        toggleFiltersBtn.addEventListener('click', () => {
+            filterDrawer.classList.add('open');
+        });
+
+        closeFiltersBtn.addEventListener('click', () => {
+            filterDrawer.classList.remove('open');
+        });
+
+        filterDrawer.addEventListener('click', (e) => {
+            if (e.target === filterDrawer) {
+                filterDrawer.classList.remove('open');
+            }
+        });
+    }
 }
 
 // Open comparison modal
