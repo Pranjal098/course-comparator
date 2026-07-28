@@ -1582,6 +1582,7 @@ let courses = [];
 let selectedCourses = [];
 let filters = {
     search: '',
+    degrees: [],
     levels: [],
     modes: [],
     states: [],
@@ -1589,7 +1590,8 @@ let filters = {
     universities: [],
     approvals: [],
     examPatterns: [],
-    maxCost: 700000
+    maxCost: 700000,
+    sortBy: 'recommended'
 };
 
 // DOM Elements
@@ -1607,203 +1609,50 @@ const closeModalBtn = document.getElementById('close-modal-btn');
 const totalCoursesStat = document.getElementById('total-courses-stat');
 const avgRatingStat = document.getElementById('avg-rating-stat');
 
-// Initialize portal
-async function init() {
-    setupEventListeners();
-    await loadCoursesData();
-    renderFilterCheckboxes();
-    renderCourses();
-    updateDashboardStats();
-}
-
-// Load and Parse CSV or Local data
-async function loadCoursesData() {
-    if (!GOOGLE_SHEET_CSV_URL) {
-        console.log("No Google Sheet configured. Using local database.");
-        courses = fallbackCourses;
-    } else {
-        try {
-            const response = await fetch(GOOGLE_SHEET_CSV_URL);
-            if (!response.ok) throw new Error("Network response error loading Sheet.");
-            const text = await response.text();
-            courses = parseCSV(text);
-            console.log("Successfully loaded courses from Google Sheets:", courses);
-        } catch (error) {
-            console.error("Error loading Google Sheets CSV, using local seed database:", error);
-            courses = fallbackCourses;
-        }
-    }
-
-    const universityApprovalsMap = {
-        'ADTU (Online)': ['UGC-DEB', 'NAAC B', 'AICTE'],
-        'Amrita (Online)': ['UGC-DEB', 'NAAC A++', 'NIRF #7', 'WES', 'AICTE'],
-        'Alliance (Online)': ['UGC-DEB', 'NAAC', 'NIRF Ranked', 'AICTE'],
-        'Andhra (Online)': ['UGC-DEB', 'NAAC A', 'NIRF', 'AICTE'],
-        'AU (Online)': ['UGC-DEB', 'NAAC A', 'AICTE'],
-        'Bennett (Online)': ['UGC', 'AICTE', 'BSI'],
-        'Christ (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF', 'AICTE'],
-        'CUOL (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF Ranked', 'AICTE', 'WES'],
-        'DPU Mumbai (Online)': ['UGC-DEB', 'NAAC A++', 'AICTE', 'WES'],
-        'DPU Pune (Online)': ['UGC-DEB', 'NAAC A++', 'NIRF', 'AICTE'],
-        'Galgotias (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF Ranked', 'AICTE'],
-        'GLA (Online)': ['UGC-DEB', 'NAAC A+', 'AICTE', 'WES'],
-        'JU (Online)': ['UGC-DEB', 'NAAC A++', 'NIRF', 'AICTE', 'WES'],
-        'KUK (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF'],
-        'LPU (Online)': ['UGC-DEB', 'NAAC A++', 'NIRF #38', 'AICTE', 'WES'],
-        'MAHE (Online)': ['UGC-DEB', 'NAAC A++', 'NIRF #6', 'AICTE', 'WES'],
-        'MUJ (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF', 'AICTE', 'WES'],
-        'NMIMS (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF', 'AICTE'],
-        'PU (Online)': ['UGC-DEB', 'NAAC A+', 'NIRF'],
-        'SCDOE (Online)': ['UGC-DEB', 'NAAC A+', 'AICTE'],
-        'Sharda (Online)': ['UGC-DEB', 'NAAC', 'AICTE', 'WES'],
-        'SMU (Online)': ['UGC-DEB', 'NAAC A+', 'AICTE'],
-        'SRM (Online)': ['UGC-DEB', 'NAAC A++', 'NIRF Ranked', 'AICTE', 'WES'],
-        'UPES (Online)': ['UGC-DEB', 'NAAC A', 'NIRF', 'AICTE', 'WES'],
-        'UU (Online)': ['UGC-DEB', 'NAAC A+', 'AICTE'],
-        'VGU (Online)': ['UGC-DEB', 'NAAC A+', 'AICTE'],
-        'VIT (Online)': ['UGC-DEB', 'NAAC A++', 'NIRF #8', 'AICTE', 'WES'],
-        'VU (Online)': ['UGC-DEB', 'NAAC A+', 'AICTE'],
-        'JIIT (Online)': ['UGC-DEB', 'NAAC A', 'NIRF Ranked', 'AICTE'],
-        'Birchwood (Executive)': ['Global QA', 'AACSB', 'WES'],
-        'EIMT (Executive)': ['EduQua', 'WES', 'EU Accredited'],
-        'UpGrad (Executive)': ['Industry Approved', 'WES', 'Global Partners'],
-        'FCU (Executive)': ['AACSB', 'EQUIS', 'WES'],
-        'BOSSE (Regular)': ['NIOS Equivalent', 'Govt Recognized'],
-        'SVSU (Distance)': ['UGC-DEB', 'NAAC A']
-    };
-
-    // Inject unique approvals for each course based on university
-    courses.forEach(course => {
-        if (!course.approvals || course.approvals.length === 0) {
-            // Include a fallback mapping for universities like Amity if manually added later
-            let mappedApprovals = universityApprovalsMap[course.university];
-            if (!mappedApprovals && course.university.toLowerCase().includes('amity')) {
-                mappedApprovals = ['UGC-DEB', 'NAAC A+', 'NIRF', 'AICTE', 'WES'];
-            }
-            course.approvals = mappedApprovals || ['UGC', 'AICTE', 'WES'];
-        }
-
-        if (!course.examPattern) {
-            const patterns = ["Online Proctored", "Center Based", "Assignment Based"];
-            course.examPattern = patterns[(course.title || 'default').length % patterns.length];
-        }
-
-        // Dummy Fee Breakdown injection
-        if (course.otp === undefined) course.otp = 5000;
-        if (course.emi === undefined) course.emi = Math.round((course.cost * 1.1) / (course.durationWeeks > 104 ? 36 : 24));
-        const numSems = course.level === 'UG' ? 6 : 4;
-        const semFee = Math.round((course.cost - course.otp) / numSems);
-        for (let i = 1; i <= 6; i++) {
-            if (i <= numSems && course[`sem${i}`] === undefined) course[`sem${i}`] = semFee;
-            else if (course[`sem${i}`] === undefined) course[`sem${i}`] = 0;
-        }
-    });
-}
-
-// Custom CSV Parser to handle sheets exports
-function parseCSV(text) {
-    const lines = text.split(/\r?\n/);
-    if (lines.length < 2) return fallbackCourses;
-
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    const parsed = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-
-        // Split handling values inside quotes
-        const row = [];
-        let inQuotes = false;
-        let currentValue = '';
-
-        for (let j = 0; j < lines[i].length; j++) {
-            const char = lines[i][j];
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                row.push(currentValue.trim());
-                currentValue = '';
-            } else {
-                currentValue += char;
-            }
-        }
-        row.push(currentValue.trim());
-
-        // Map row elements to course object
-        const course = {};
-        headers.forEach((header, idx) => {
-            let val = row[idx] || '';
-
-            // Clean up surrounding quotes
-            if (val.startsWith('"') && val.endsWith('"')) {
-                val = val.substring(1, val.length - 1);
-            }
-
-            if (header === 'cost' || header === 'durationweeks' || header === 'reviewscount' || header === 'otp' || header === 'emi' || header.startsWith('sem')) {
-                course[header] = parseInt(val) || 0;
-            } else if (header === 'discountpercent' || header === 'rating') {
-                course[header] = parseFloat(val) || 0;
-            } else if (header === 'careersupport') {
-                course[header] = val.toLowerCase() === 'true';
-            } else if (header === 'syllabus' || header === 'approvals') {
-                // Split list items by semicolon to avoid CSV commas splitting issues
-                course[header] = val ? val.split(';').map(item => item.trim()) : [];
-            } else {
-                // Keep camelCase mappings for fields mapped differently in HTML
-                if (header === 'durationweeks') course['durationWeeks'] = parseInt(val) || 0;
-                else if (header === 'discountpercent') course['discountPercent'] = parseFloat(val) || 0;
-                else if (header === 'reviewscount') course['reviewsCount'] = parseInt(val) || 0;
-                else if (header === 'careersupport') course['careerSupport'] = val.toLowerCase() === 'true';
-                else if (header === 'brochureurl') course['brochureUrl'] = val;
-                else if (header === 'exampattern') course['examPattern'] = val;
-                else if (header === 'imagecolor') course['imageColor'] = val;
-                else course[header] = val;
-            }
-        });
-
-        // Ensure camelCase properties exist
-        if (course.durationweeks !== undefined) course.durationWeeks = course.durationweeks;
-        if (course.discountpercent !== undefined) course.discountPercent = course.discountpercent;
-        if (course.reviewscount !== undefined) course.reviewsCount = course.reviewscount;
-        if (course.careersupport !== undefined) course.careerSupport = course.careersupport;
-        if (course.brochureurl !== undefined) course.brochureUrl = course.brochureurl;
-
-        parsed.push(course);
-    }
-    return parsed.length ? parsed : fallbackCourses;
-}
-
-// Calculate discounted cost
-function getEffectiveCost(course) {
-    const discount = course.discountPercent || 0;
-    if (discount > 0) {
-        return Math.round(course.cost * (1 - discount / 100));
-    }
-    return course.cost;
+// Degree Extraction Helper
+function getCourseDegree(course) {
+    const title = course.title || '';
+    if (/\bMBA\b/i.test(title)) return 'MBA';
+    if (/\bBCA\b/i.test(title)) return 'BCA';
+    if (/\bBBA\b/i.test(title)) return 'BBA';
+    if (/\bMCA\b/i.test(title)) return 'MCA';
+    if (/\bB\.Com\b/i.test(title) || /\bBCom\b/i.test(title)) return 'B.Com';
+    if (/\bBA\b/i.test(title)) return 'BA';
+    if (/\bPGDBA\b/i.test(title) || /\bDiploma\b/i.test(title)) return 'Diploma / PGDBA';
+    return 'Other';
 }
 
 // Update dashboard metrics
 function updateDashboardStats() {
     if (totalCoursesStat) totalCoursesStat.textContent = courses.length;
-    if (avgRatingStat) {
-        const totalRating = courses.reduce((acc, c) => acc + c.rating, 0);
-        avgRatingStat.textContent = (totalRating / courses.length).toFixed(1);
-    }
 }
 
 // Generate checkbox dynamic lists
 function renderFilterCheckboxes() {
+    const degreesContainer = document.getElementById('degrees-filter');
     const levelsContainer = document.getElementById('levels-filter');
     const modesContainer = document.getElementById('modes-filter');
     const statesContainer = document.getElementById('states-filter');
     const categoriesContainer = document.getElementById('categories-filter');
     const universitiesContainer = document.getElementById('universities-filter');
 
+    // Degrees / Program Titles
+    if (degreesContainer) {
+        const degrees = [...new Set(courses.map(c => getCourseDegree(c)))].filter(Boolean).sort();
+        degreesContainer.innerHTML = degrees.map(deg => `
+            <label class="custom-checkbox">
+                <input type="checkbox" name="degree" value="${deg}" ${filters.degrees.includes(deg) ? 'checked' : ''}>
+                <span class="checkbox-box"></span>
+                ${deg}
+            </label>
+        `).join('');
+    }
+
     // Levels
     const levels = [...new Set(courses.map(c => c.level))].filter(Boolean);
     levelsContainer.innerHTML = levels.map(level => `
         <label class="custom-checkbox">
-            <input type="checkbox" name="level" value="${level}">
+            <input type="checkbox" name="level" value="${level}" ${filters.levels.includes(level) ? 'checked' : ''}>
             <span class="checkbox-box"></span>
             ${level === 'UG' ? 'Undergraduate (UG)' : 'Postgraduate (PG)'}
         </label>
@@ -1813,7 +1662,7 @@ function renderFilterCheckboxes() {
     const modes = [...new Set(courses.map(c => c.mode))].filter(Boolean);
     modesContainer.innerHTML = modes.map(mode => `
         <label class="custom-checkbox">
-            <input type="checkbox" name="mode" value="${mode}">
+            <input type="checkbox" name="mode" value="${mode}" ${filters.modes.includes(mode) ? 'checked' : ''}>
             <span class="checkbox-box"></span>
             ${mode}
         </label>
@@ -1823,7 +1672,7 @@ function renderFilterCheckboxes() {
     const states = [...new Set(courses.map(c => c.state))].filter(Boolean).sort();
     statesContainer.innerHTML = states.map(state => `
         <label class="custom-checkbox">
-            <input type="checkbox" name="state" value="${state}">
+            <input type="checkbox" name="state" value="${state}" ${filters.states.includes(state) ? 'checked' : ''}>
             <span class="checkbox-box"></span>
             ${state}
         </label>
@@ -1833,7 +1682,7 @@ function renderFilterCheckboxes() {
     const categories = [...new Set(courses.map(c => c.category))].filter(Boolean);
     categoriesContainer.innerHTML = categories.map(cat => `
         <label class="custom-checkbox">
-            <input type="checkbox" name="category" value="${cat}">
+            <input type="checkbox" name="category" value="${cat}" ${filters.categories.includes(cat) ? 'checked' : ''}>
             <span class="checkbox-box"></span>
             ${cat}
         </label>
@@ -1843,7 +1692,7 @@ function renderFilterCheckboxes() {
     const universities = [...new Set(courses.map(c => c.university))].filter(Boolean);
     universitiesContainer.innerHTML = universities.map(univ => `
         <label class="custom-checkbox">
-            <input type="checkbox" name="university" value="${univ}">
+            <input type="checkbox" name="university" value="${univ}" ${filters.universities.includes(univ) ? 'checked' : ''}>
             <span class="checkbox-box"></span>
             ${univ}
         </label>
@@ -1857,7 +1706,7 @@ function renderFilterCheckboxes() {
     if (approvalsContainer) {
         approvalsContainer.innerHTML = uniqueApprovals.map(appr => `
             <label class="custom-checkbox">
-                <input type="checkbox" name="approval" value="${appr}">
+                <input type="checkbox" name="approval" value="${appr}" ${filters.approvals.includes(appr) ? 'checked' : ''}>
                 <span class="checkbox-box"></span>
                 ${appr}
             </label>
@@ -1870,13 +1719,484 @@ function renderFilterCheckboxes() {
         const patterns = [...new Set(courses.map(c => c.examPattern))].filter(Boolean).sort();
         examPatternContainer.innerHTML = patterns.map(pat => `
             <label class="custom-checkbox">
-                <input type="checkbox" name="examPattern" value="${pat}">
+                <input type="checkbox" name="examPattern" value="${pat}" ${filters.examPatterns.includes(pat) ? 'checked' : ''}>
                 <span class="checkbox-box"></span>
                 ${pat}
             </label>
         `).join('');
     }
 }
+
+// Render active filter pills
+function renderActiveFilterChips() {
+    const chipsBar = document.getElementById('active-filters-bar');
+    if (!chipsBar) return;
+
+    let chips = [];
+
+    if (filters.search) {
+        chips.push({ label: `Search: "${filters.search}"`, type: 'search' });
+    }
+    filters.degrees.forEach(d => chips.push({ label: `Degree: ${d}`, type: 'degree', value: d }));
+    filters.levels.forEach(l => chips.push({ label: `Level: ${l}`, type: 'level', value: l }));
+    filters.modes.forEach(m => chips.push({ label: `Mode: ${m}`, type: 'mode', value: m }));
+    filters.states.forEach(s => chips.push({ label: `State: ${s}`, type: 'state', value: s }));
+    filters.categories.forEach(c => chips.push({ label: `Domain: ${c}`, type: 'category', value: c }));
+    filters.universities.forEach(u => chips.push({ label: `Univ: ${u}`, type: 'university', value: u }));
+    filters.approvals.forEach(a => chips.push({ label: `Approval: ${a}`, type: 'approval', value: a }));
+    filters.examPatterns.forEach(e => chips.push({ label: `Exam: ${e}`, type: 'examPattern', value: e }));
+    if (filters.maxCost < 700000) {
+        chips.push({ label: `Max Fee: ₹${filters.maxCost.toLocaleString('en-IN')}`, type: 'maxCost' });
+    }
+
+    if (chips.length === 0) {
+        chipsBar.style.display = 'none';
+        chipsBar.innerHTML = '';
+        return;
+    }
+
+    chipsBar.style.display = 'flex';
+    chipsBar.innerHTML = `
+        <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600; margin-right:0.3rem;">Active Filters:</span>
+        ${chips.map(chip => `
+            <span class="filter-chip">
+                ${chip.label}
+                <span class="chip-remove" data-type="${chip.type}" data-value="${chip.value || ''}">&times;</span>
+            </span>
+        `).join('')}
+        <button class="clear-all-chip" id="clear-all-chips-btn">Clear All 🔄</button>
+    `;
+
+    // Bind remove events
+    chipsBar.querySelectorAll('.chip-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const type = e.currentTarget.getAttribute('data-type');
+            const value = e.currentTarget.getAttribute('data-value');
+            removeSingleFilter(type, value);
+        });
+    });
+
+    const clearAllBtn = document.getElementById('clear-all-chips-btn');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', resetAllFilters);
+    }
+}
+
+// Remove single filter tag
+function removeSingleFilter(type, value) {
+    if (type === 'search') {
+        filters.search = '';
+        if (searchInput) searchInput.value = '';
+    } else if (type === 'maxCost') {
+        filters.maxCost = 700000;
+        if (costSlider) costSlider.value = 700000;
+        if (costValueEl) costValueEl.textContent = '₹7,00,000';
+    } else if (type === 'degree') {
+        filters.degrees = filters.degrees.filter(d => d !== value);
+    } else if (type === 'level') {
+        filters.levels = filters.levels.filter(l => l !== value);
+    } else if (type === 'mode') {
+        filters.modes = filters.modes.filter(m => m !== value);
+    } else if (type === 'state') {
+        filters.states = filters.states.filter(s => s !== value);
+    } else if (type === 'category') {
+        filters.categories = filters.categories.filter(c => c !== value);
+    } else if (type === 'university') {
+        filters.universities = filters.universities.filter(u => u !== value);
+    } else if (type === 'approval') {
+        filters.approvals = filters.approvals.filter(a => a !== value);
+    } else if (type === 'examPattern') {
+        filters.examPatterns = filters.examPatterns.filter(e => e !== value);
+    }
+
+    renderFilterCheckboxes();
+    renderCourses();
+}
+
+// Reset all filters
+function resetAllFilters() {
+    filters.search = '';
+    filters.degrees = [];
+    filters.levels = [];
+    filters.modes = [];
+    filters.states = [];
+    filters.categories = [];
+    filters.universities = [];
+    filters.approvals = [];
+    filters.examPatterns = [];
+    filters.maxCost = 700000;
+    filters.sortBy = 'recommended';
+
+    if (searchInput) searchInput.value = '';
+
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) sortSelect.value = 'recommended';
+
+    if (costSlider) costSlider.value = 700000;
+    if (costValueEl) costValueEl.textContent = '₹7,00,000';
+
+    document.querySelectorAll('.filters-sidebar input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+    });
+
+    renderFilterCheckboxes();
+    renderCourses();
+}
+
+// Render filtered courses
+function renderCourses() {
+    renderActiveFilterChips();
+
+    let filtered = courses.filter(course => {
+        const matchesSearch = (course.title || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+            (course.university || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+            (course.category || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+            (course.city || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+            (course.state || '').toLowerCase().includes(filters.search.toLowerCase());
+
+        const courseDegree = getCourseDegree(course);
+        const matchesDegree = filters.degrees.length === 0 || filters.degrees.includes(courseDegree);
+        const matchesLevel = filters.levels.length === 0 || filters.levels.includes(course.level);
+        const matchesMode = filters.modes.length === 0 || filters.modes.includes(course.mode);
+        const matchesState = filters.states.length === 0 || filters.states.includes(course.state);
+        const matchesCategory = filters.categories.length === 0 || filters.categories.includes(course.category);
+        const matchesUniversity = filters.universities.length === 0 || filters.universities.includes(course.university);
+        const matchesApproval = filters.approvals.length === 0 || filters.approvals.some(a => (course.approvals || []).includes(a));
+        const matchesExam = filters.examPatterns.length === 0 || filters.examPatterns.includes(course.examPattern);
+
+        const effectiveCost = getEffectiveCost(course);
+        const matchesCost = effectiveCost <= filters.maxCost;
+
+        return matchesSearch && matchesDegree && matchesLevel && matchesMode && matchesState && matchesCategory && matchesUniversity && matchesApproval && matchesExam && matchesCost;
+    });
+
+    // Sorting logic
+    if (filters.sortBy === 'price-asc') {
+        filtered.sort((a, b) => getEffectiveCost(a) - getEffectiveCost(b));
+    } else if (filters.sortBy === 'price-desc') {
+        filtered.sort((a, b) => getEffectiveCost(b) - getEffectiveCost(a));
+    } else if (filters.sortBy === 'duration-asc') {
+        filtered.sort((a, b) => (a.durationWeeks || 0) - (b.durationWeeks || 0));
+    } else if (filters.sortBy === 'title-asc') {
+        filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    }
+
+    resultCountEl.textContent = `${filtered.length} courses match your criteria`;
+
+    if (filtered.length === 0) {
+        coursesGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-icon">🔍</div>
+                <h3>No courses found</h3>
+                <p>Try resetting some filters or tweaking your search terms.</p>
+                <button onclick="resetAllFilters()" class="compare-action-btn" style="margin-top:1rem; padding:0.6rem 1.5rem;">Reset All Filters 🔄</button>
+            </div>
+        `;
+        return;
+    }
+
+    coursesGrid.innerHTML = filtered.map((course, index) => {
+        const isAdded = selectedCourses.some(c => c.id === course.id);
+        const hasDiscount = course.discountPercent > 0;
+        const originalCost = course.cost;
+        const finalCost = getEffectiveCost(course);
+        const animDelay = (index * 0.04).toFixed(2);
+
+        return `
+            <div class="course-card" data-id="${course.id}" style="animation-delay: ${animDelay}s;">
+                <div class="card-banner" style="background: ${course.imageColor || 'linear-gradient(135deg, #1f2937, #111827)'}">
+                    <span class="univ-badge">${course.university}</span>
+                    <span class="level-badge ${course.level ? course.level.toLowerCase() : 'ug'}">${course.level}</span>
+                </div>
+                <div class="card-body">
+                    <h3 class="course-title">${course.title}</h3>
+                    
+                    <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:0.25rem; margin-bottom:0.6rem;">
+                        <span>📍</span>
+                        <span>${course.city || 'N/A'}, ${course.state || 'N/A'}</span>
+                    </div>
+
+                    <div class="card-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Duration</span>
+                            <span class="metric-val">${course.duration}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Domain</span>
+                            <span class="metric-val">${course.category}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Exam Mode</span>
+                            <span class="metric-val" style="font-size: 0.8rem; font-weight:600; color:var(--primary);">${course.examPattern || 'N/A'}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Delivery Mode</span>
+                            <span class="metric-val" style="font-size: 0.8rem; line-height: 1.1;">
+                                ${(course.type || '').split(' / ')[0]}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.2rem;">
+                        ${(course.approvals || []).map(a => `<span style="font-size:0.65rem; background:rgba(255,255,255,0.03); padding:0.15rem 0.4rem; border-radius:4px; border:1px solid rgba(255,255,255,0.08); color:var(--text-muted);">${a}</span>`).join('')}
+                    </div>
+                    
+                    <div class="card-actions" style="gap: 0.5rem;">
+                        <div class="cost-display">
+                            <span class="metric-label">Total Fee</span>
+                            ${hasDiscount ? `
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="text-decoration: line-through; font-size: 0.85rem; color: var(--text-muted); line-height:1;">
+                                        ₹${originalCost.toLocaleString('en-IN')}
+                                    </span>
+                                    <span class="cost-amount" style="font-size:1.15rem;">
+                                        ₹${finalCost.toLocaleString('en-IN')} 
+                                    </span>
+                                </div>
+                            ` : `
+                                <span class="cost-amount" style="font-size:1.15rem;">₹${finalCost.toLocaleString('en-IN')}</span>
+                            `}
+                            ${course.emi ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem; font-weight:600;">EMI from ₹${course.emi.toLocaleString('en-IN')}/mo</div>` : ''}
+                        </div>
+                        
+                        <div style="display:flex; gap:0.4rem;">
+                            <a href="${course.brochureUrl || '#'}" target="_blank" class="compare-btn" style="text-decoration:none; padding: 0.5rem 0.6rem; border-color:rgba(255,255,255,0.15); color:var(--text-muted);" title="Download Syllabus Brochure">
+                                📄
+                            </a>
+                            <button class="compare-btn ${isAdded ? 'active' : ''}" data-id="${course.id}">
+                                <span>${isAdded ? 'Selected' : 'Compare'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Bind event listeners to compare buttons
+    document.querySelectorAll('.compare-btn').forEach(btn => {
+        if (btn.hasAttribute('data-id')) {
+            btn.addEventListener('click', (e) => {
+                const courseId = e.currentTarget.getAttribute('data-id');
+                toggleCompareCourse(courseId);
+            });
+        }
+    });
+}
+
+// Setup Event Listeners
+function setupEventListeners() {
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            filters.search = e.target.value;
+            renderCourses();
+        });
+    }
+
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+            filters.sortBy = e.target.value;
+            renderCourses();
+        });
+    }
+
+    if (costSlider) {
+        costSlider.addEventListener('input', (e) => {
+            filters.maxCost = parseInt(e.target.value);
+            costValueEl.textContent = `₹${filters.maxCost.toLocaleString('en-IN')}`;
+            renderCourses();
+        });
+    }
+
+    // Clear all buttons
+    const resetHeaderBtn = document.getElementById('reset-filters-btn-header');
+    const resetFooterBtn = document.getElementById('reset-filters-btn-footer');
+    if (resetHeaderBtn) resetHeaderBtn.addEventListener('click', resetAllFilters);
+    if (resetFooterBtn) resetFooterBtn.addEventListener('click', resetAllFilters);
+
+    document.querySelectorAll('.filters-sidebar').forEach(sidebar => {
+        sidebar.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                const name = e.target.name;
+                const value = e.target.value;
+                const checked = e.target.checked;
+
+                if (name === 'degree') {
+                    if (checked) filters.degrees.push(value);
+                    else filters.degrees = filters.degrees.filter(d => d !== value);
+                } else if (name === 'level') {
+                    if (checked) filters.levels.push(value);
+                    else filters.levels = filters.levels.filter(l => l !== value);
+                } else if (name === 'mode') {
+                    if (checked) filters.modes.push(value);
+                    else filters.modes = filters.modes.filter(m => m !== value);
+                } else if (name === 'state') {
+                    if (checked) filters.states.push(value);
+                    else filters.states = filters.states.filter(s => s !== value);
+                } else if (name === 'category') {
+                    if (checked) filters.categories.push(value);
+                    else filters.categories = filters.categories.filter(c => c !== value);
+                } else if (name === 'university') {
+                    if (checked) filters.universities.push(value);
+                    else filters.universities = filters.universities.filter(u => u !== value);
+                } else if (name === 'approval') {
+                    if (checked) filters.approvals.push(value);
+                    else filters.approvals = filters.approvals.filter(a => a !== value);
+                } else if (name === 'examPattern') {
+                    if (checked) filters.examPatterns.push(value);
+                    else filters.examPatterns = filters.examPatterns.filter(e => e !== value);
+                }
+
+                renderCourses();
+            }
+        });
+    });
+
+    compareActionBtn.addEventListener('click', openComparisonModal);
+    closeModalBtn.addEventListener('click', closeComparisonModal);
+
+    comparisonModal.addEventListener('click', (e) => {
+        if (e.target === comparisonModal) closeComparisonModal();
+    });
+
+    // Mobile/Universal Drawer Toggle
+    const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
+    const filterDrawer = document.getElementById('filter-drawer');
+    const closeFiltersBtn = document.getElementById('close-filters-btn');
+
+    if (toggleFiltersBtn && filterDrawer) {
+        toggleFiltersBtn.addEventListener('click', () => {
+            filterDrawer.classList.add('open');
+        });
+
+        closeFiltersBtn.addEventListener('click', () => {
+            filterDrawer.classList.remove('open');
+        });
+
+        filterDrawer.addEventListener('click', (e) => {
+            if (e.target === filterDrawer) {
+                filterDrawer.classList.remove('open');
+            }
+        });
+    }
+
+    setupQuickCompare();
+}
+
+// Render dynamic comparison matrix inside modal
+function renderComparisonMatrix() {
+    const minCost = Math.min(...selectedCourses.map(c => getEffectiveCost(c)));
+    const minWeeks = Math.min(...selectedCourses.map(c => c.durationWeeks));
+
+    const cols = selectedCourses;
+
+    let html = `
+        <div class="comparison-table-wrapper">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th class="feature-label">Feature</th>
+                        ${cols.map(c => `
+                            <th class="table-header-col">
+                                <div class="univ-name">${c.university}</div>
+                                <div class="course-name">${c.title}</div>
+                            </th>
+                        `).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="feature-label">Program Level</td>
+                        ${cols.map(c => `<td><span class="level-badge ${c.level ? c.level.toLowerCase() : 'ug'}">${c.level === 'UG' ? 'Undergraduate' : 'Postgraduate'}</span></td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Campus Location</td>
+                        ${cols.map(c => `<td>📍 <strong>${c.city || 'N/A'}, ${c.state || 'N/A'}</strong></td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Tuition Fee</td>
+                        ${cols.map(c => {
+        const effectiveCost = getEffectiveCost(c);
+        const originalCost = c.cost;
+        const isBest = effectiveCost === minCost;
+        const hasDiscount = c.discountPercent > 0;
+
+        return `<td class="${isBest ? 'highlight-best' : ''}">
+                                ${hasDiscount ? `
+                                    <span style="text-decoration: line-through; font-size: 0.8rem; color: var(--text-muted);">
+                                        ₹${originalCost.toLocaleString('en-IN')}
+                                    </span><br>
+                                ` : ''}
+                                <strong>₹${effectiveCost.toLocaleString('en-IN')}</strong>
+                                ${hasDiscount ? `<span style="font-size:0.75rem; color:var(--accent); font-weight:700;"> (-${c.discountPercent}%)</span>` : ''}
+                                ${isBest ? '<div style="font-size:0.75rem; color:var(--accent); font-weight:bold; margin-top:4px;">Best Price</div>' : ''}
+                            </td>`;
+    }).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Fee Breakdown</td>
+                        ${cols.map(c => `
+                            <td>
+                                <ul style="list-style:none; padding:0; margin:0; font-size:0.75rem; color:var(--text-muted);">
+                                    ${c.otp > 0 ? `<li style="margin-bottom:2px;"><strong style="color:#fff;">OTP:</strong> ₹${c.otp.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem1 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 1:</strong> ₹${c.sem1.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem2 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 2:</strong> ₹${c.sem2.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem3 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 3:</strong> ₹${c.sem3.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem4 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 4:</strong> ₹${c.sem4.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem5 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 5:</strong> ₹${c.sem5.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem6 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 6:</strong> ₹${c.sem6.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.emi > 0 ? `<li style="margin-top:4px; padding-top:4px; border-top:1px solid rgba(255,255,255,0.1);"><strong style="color:var(--primary);">EMI Options:</strong> ₹${c.emi.toLocaleString('en-IN')}/mo</li>` : ''}
+                                </ul>
+                            </td>
+                        `).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Duration</td>
+                        ${cols.map(c => {
+        const isBest = c.durationWeeks === minWeeks;
+        return `<td class="${isBest ? 'highlight-best' : ''}">
+                                ${c.duration} (${c.durationWeeks} weeks)
+                                ${isBest ? '<div style="font-size:0.75rem; color:var(--accent); font-weight:bold; margin-top:4px;">Shortest Program</div>' : ''}
+                            </td>`;
+    }).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Category / Domain</td>
+                        ${cols.map(c => `<td>${c.category}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Accreditations</td>
+                        ${cols.map(c => `
+                            <td>
+                                <div style="display:flex; flex-direction:column; gap:0.3rem;">
+                                    ${(c.approvals || []).map(a => `<span class="support-badge yes" style="font-size:0.75rem;">${a}</span>`).join('')}
+                                </div>
+                            </td>
+                        `).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Prerequisites</td>
+                        ${cols.map(c => `<td style="font-size:0.85rem; color:var(--text-muted);">${c.eligibility}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Mode of Delivery</td>
+                        ${cols.map(c => `<td style="font-size:0.85rem;">${c.type}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Exam Pattern</td>
+                        ${cols.map(c => `<td style="font-size:0.85rem; font-weight:600; color:var(--primary);">${c.examPattern || 'N/A'}</td>`).join('')}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    modalContentBody.innerHTML = html;
+}
+
+// Execute Init
+
 
 // Render filtered courses
 function renderCourses() {
@@ -1905,11 +2225,11 @@ function renderCourses() {
 
     if (filtered.length === 0) {
         coursesGrid.innerHTML = `
-            <div class="empty-state" style="grid-column: 1 / -1;">
+        < div class="empty-state" style = "grid-column: 1 / -1;" >
                 <div class="empty-icon">🔍</div>
                 <h3>No courses found</h3>
                 <p>Try resetting some filters or tweaking your search terms.</p>
-            </div>
+            </div >
         `;
         return;
     }
@@ -1922,7 +2242,7 @@ function renderCourses() {
         const animDelay = (index * 0.05).toFixed(2);
 
         return `
-            <div class="course-card" data-id="${course.id}" style="animation-delay: ${animDelay}s;">
+        < div class="course-card" data - id="${course.id}" style = "animation-delay: ${animDelay}s;" >
                 <div class="card-banner" style="background: ${course.imageColor || 'linear-gradient(135deg, #1f2937, #111827)'}">
                     <span class="univ-badge">${course.university}</span>
                     <span class="level-badge ${course.level ? course.level.toLowerCase() : 'ug'}">${course.level}</span>
@@ -1995,7 +2315,7 @@ function renderCourses() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         `;
     }).join('');
 
@@ -2035,10 +2355,10 @@ function updateCompareTray() {
     if (selectedCourses.length > 0) {
         compareTray.classList.add('visible');
         trayItemsContainer.innerHTML = selectedCourses.map(course => `
-            <div class="tray-item">
+        < div class="tray-item" >
                 <span>${course.university} - ${course.title.split(' ')[0]}...</span>
                 <span class="remove-tray-item" data-id="${course.id}">✕</span>
-            </div>
+            </div >
         `).join('');
 
         document.querySelectorAll('.remove-tray-item').forEach(btn => {
@@ -2061,7 +2381,7 @@ function setupEventListeners() {
 
     costSlider.addEventListener('input', (e) => {
         filters.maxCost = parseInt(e.target.value);
-        costValueEl.textContent = `₹${filters.maxCost.toLocaleString('en-IN')}`;
+        costValueEl.textContent = `₹${filters.maxCost.toLocaleString('en-IN')} `;
         renderCourses();
     });
 
@@ -2147,8 +2467,8 @@ function setupQuickCompare() {
 
     function renderQuickResults(query = '') {
         const lowerQuery = query.toLowerCase().trim();
-        const filtered = courses.filter(c => 
-            (c.university && c.university.toLowerCase().includes(lowerQuery)) || 
+        const filtered = courses.filter(c =>
+            (c.university && c.university.toLowerCase().includes(lowerQuery)) ||
             (c.title && c.title.toLowerCase().includes(lowerQuery)) ||
             (c.category && c.category.toLowerCase().includes(lowerQuery)) ||
             (c.level && c.level.toLowerCase().includes(lowerQuery))

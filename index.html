@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduSphere | Elite Online Course & Program Comparator (UG/PG)</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
     <!-- Header Section -->
@@ -13,17 +15,13 @@
         <div class="brand-section">
             <div>
                 <h1>EduSphere Course Comparator</h1>
-                <p class="sub-tagline">Evaluate, compare, and discover elite Undergraduate (UG) and Postgraduate (PG) programs</p>
+                <p class="sub-tagline">Evaluate, compare, and discover elite Undergraduate (UG) and Postgraduate (PG)
+                    programs</p>
             </div>
             <div class="stats-summary">
                 <div class="stat-item">
                     <span>Total Programs:</span>
                     <span class="stat-val" id="total-courses-stat">0</span>
-                </div>
-                <div class="stat-item">
-                    <span>Average Rating:</span>
-                    <span class="stat-val" id="avg-rating-stat">0.0</span>
-                    <span class="star-icon" style="color: #fbbf24; font-size: 0.95rem;">★</span>
                 </div>
             </div>
         </div>
@@ -31,99 +29,140 @@
 
     <!-- Dashboard Layout -->
     <main class="dashboard">
-        
+
         <div class="top-action-bar">
-            <div class="search-input-wrapper" style="flex-grow:1; max-width:600px;">
+            <div class="search-input-wrapper" style="flex-grow:1; max-width:500px;">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="Search by name, university, subject..." style="width:100%;">
+                <input type="text" id="search-input" placeholder="Search by name, university, subject..."
+                    style="width:100%;">
             </div>
-            <div style="display:flex; gap:1rem; flex-wrap:wrap;">
-                <button id="quick-compare-btn" class="compare-btn" style="background:rgba(56, 189, 248, 0.1); backdrop-filter:blur(10px); padding:0.8rem 1.5rem; color:var(--primary); border-color:var(--primary);">
-                    <span style="font-size:1rem; font-weight:700;">⚖️ Quick Compare</span>
+            <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
+                <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="font-size:0.85rem; color:var(--text-muted);">Sort:</span>
+                    <select id="sort-select"
+                        style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:#fff; border-radius:10px; padding:0.6rem 0.8rem; font-size:0.85rem; font-family:var(--font-body); cursor:pointer; outline:none;">
+                        <option value="recommended" style="background:var(--bg-dark);">Recommended</option>
+                        <option value="price-asc" style="background:var(--bg-dark);">Price: Low to High</option>
+                        <option value="price-desc" style="background:var(--bg-dark);">Price: High to Low</option>
+                        <option value="duration-asc" style="background:var(--bg-dark);">Duration: Shortest</option>
+                        <option value="title-asc" style="background:var(--bg-dark);">Title: A to Z</option>
+                    </select>
+                </div>
+                <button id="quick-compare-btn" class="compare-btn"
+                    style="background:rgba(56, 189, 248, 0.1); backdrop-filter:blur(10px); padding:0.8rem 1.2rem; color:var(--primary); border-color:var(--primary);">
+                    <span style="font-size:0.95rem; font-weight:700;">⚖️ Quick Compare</span>
                 </button>
-                <button id="toggle-filters-btn" class="compare-btn" style="background:var(--bg-card); backdrop-filter:blur(10px); padding:0.8rem 1.5rem;">
-                    <span style="font-size:1rem;">⚙️ Filter & Refine</span>
+                <button id="toggle-filters-btn" class="compare-btn"
+                    style="background:var(--bg-card); backdrop-filter:blur(10px); padding:0.8rem 1.2rem;">
+                    <span style="font-size:0.95rem;">⚙️ Filter & Refine</span>
                 </button>
             </div>
+        </div>
+
+        <!-- Active Filters Bar -->
+        <div id="active-filters-bar" class="active-filters-bar"
+            style="display:none; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+            <!-- Dynamic Chips Loaded Here -->
         </div>
 
         <!-- Filter Overlay -->
         <div class="drawer-overlay" id="filter-drawer">
             <!-- Filter Sidebar -->
             <aside class="filters-sidebar">
-                <div class="drawer-header">
-                    <h3 style="font-family:var(--font-heading); font-size:1.5rem; color:var(--primary);">Refine Results</h3>
-                    <button id="close-filters-btn" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:35px; height:35px; color:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:var(--transition);">&times;</button>
-                </div>
-
-            <!-- Program Level -->
-            <div>
-                <h4 class="filter-group-title">Program Level</h4>
-                <div class="checkbox-list" id="levels-filter">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-
-            <!-- Delivery Mode -->
-            <div>
-                <h4 class="filter-group-title">Delivery Mode</h4>
-                <div class="checkbox-list" id="modes-filter">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-
-            <!-- State Filter -->
-            <div>
-                <h4 class="filter-group-title">State</h4>
-                <div class="checkbox-list" id="states-filter">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-
-            <!-- Subject Area -->
-            <div>
-                <h4 class="filter-group-title">Domain / Category</h4>
-                <div class="checkbox-list" id="categories-filter">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-
-            <!-- Universities -->
-            <div>
-                <h4 class="filter-group-title">Universities</h4>
-                <div class="checkbox-list" id="universities-filter">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-
-            <!-- Accreditations -->
-            <div>
-                <h4 class="filter-group-title">Accreditations</h4>
-                <div class="checkbox-list" id="approvals-filter">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-
-            <!-- Exam Pattern -->
-            <div>
-                <h4 class="filter-group-title">Exam Pattern</h4>
-                <div class="checkbox-list" id="exam-pattern-filter">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-
-            <!-- Price Range -->
-            <div>
-                <h4 class="filter-group-title">Max Tuition Fee</h4>
-                <div class="range-inputs">
-                    <input type="range" id="cost-slider" class="range-slider" min="50000" max="700000" step="25000" value="700000">
-                    <div class="range-labels">
-                        <span>₹50K</span>
-                        <span id="cost-value" style="color: var(--primary); font-weight:700;">₹7,00,000</span>
+                <div class="drawer-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="font-family:var(--font-heading); font-size:1.4rem; color:var(--primary); margin:0;">
+                        Refine Results</h3>
+                    <div style="display:flex; align-items:center; gap:0.8rem;">
+                        <button id="reset-filters-btn-header"
+                            style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#ef4444; border-radius:8px; padding:0.3rem 0.7rem; font-size:0.8rem; cursor:pointer; font-weight:600;">Clear
+                            All</button>
+                        <button id="close-filters-btn"
+                            style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:32px; height:32px; color:#fff; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:var(--transition);">&times;</button>
                     </div>
                 </div>
-            </div>
-        </aside>
+
+                <!-- Degree / Title Filter -->
+                <div>
+                    <h4 class="filter-group-title">Degree / Program Title</h4>
+                    <div class="checkbox-list" id="degrees-filter">
+                        <!-- Loaded dynamically (MBA, BCA, BBA, MCA, B.Com, BA, etc.) -->
+                    </div>
+                </div>
+
+                <!-- Program Level -->
+                <div>
+                    <h4 class="filter-group-title">Program Level</h4>
+                    <div class="checkbox-list" id="levels-filter">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Delivery Mode -->
+                <div>
+                    <h4 class="filter-group-title">Delivery Mode</h4>
+                    <div class="checkbox-list" id="modes-filter">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- State Filter -->
+                <div>
+                    <h4 class="filter-group-title">State</h4>
+                    <div class="checkbox-list" id="states-filter">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Subject Area -->
+                <div>
+                    <h4 class="filter-group-title">Domain / Category</h4>
+                    <div class="checkbox-list" id="categories-filter">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Universities -->
+                <div>
+                    <h4 class="filter-group-title">Universities</h4>
+                    <div class="checkbox-list" id="universities-filter">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Accreditations -->
+                <div>
+                    <h4 class="filter-group-title">Accreditations</h4>
+                    <div class="checkbox-list" id="approvals-filter">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Exam Pattern -->
+                <div>
+                    <h4 class="filter-group-title">Exam Pattern</h4>
+                    <div class="checkbox-list" id="exam-pattern-filter">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div>
+                    <h4 class="filter-group-title">Max Tuition Fee</h4>
+                    <div class="range-inputs">
+                        <input type="range" id="cost-slider" class="range-slider" min="50000" max="700000" step="25000"
+                            value="700000">
+                        <div class="range-labels">
+                            <span>₹50K</span>
+                            <span id="cost-value" style="color: var(--primary); font-weight:700;">₹7,00,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="reset-filters-btn-footer" class="compare-action-btn"
+                    style="width:100%; margin-top:1rem; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.3); color:#ef4444; font-size:0.9rem;">
+                    Clear All Filters 🔄
+                </button>
+            </aside>
         </div>
 
         <!-- Main Panel -->
@@ -131,7 +170,7 @@
             <div class="grid-header">
                 <span class="result-count" id="result-count">0 courses match your criteria</span>
             </div>
-            
+
             <!-- Courses Card Grid -->
             <div class="courses-grid" id="courses-grid">
                 <!-- Course Cards will load here dynamically -->
@@ -169,7 +208,9 @@
             <div class="modal-header">
                 <div style="display:flex; align-items:center; gap:0.75rem;">
                     <h3 class="modal-title" style="margin:0;">⚖️ Quick Compare</h3>
-                    <span id="quick-compare-count" style="background:var(--primary-glow); border:1px solid var(--border-highlight); color:var(--primary); font-size:0.8rem; font-weight:700; padding:0.25rem 0.64rem; border-radius:20px;">0 / 3 Selected</span>
+                    <span id="quick-compare-count"
+                        style="background:var(--primary-glow); border:1px solid var(--border-highlight); color:var(--primary); font-size:0.8rem; font-weight:700; padding:0.25rem 0.64rem; border-radius:20px;">0
+                        / 3 Selected</span>
                 </div>
                 <button id="close-quick-compare-btn" class="close-modal-btn" aria-label="Close">&times;</button>
             </div>
@@ -178,13 +219,16 @@
                     <span class="search-icon">🔍</span>
                     <input type="text" id="quick-compare-search" placeholder="Type university or course name...">
                 </div>
-                <div id="quick-compare-results" style="max-height:380px; overflow-y:auto; display:flex; flex-direction:column; gap:0.6rem; padding-right:5px;">
+                <div id="quick-compare-results"
+                    style="max-height:380px; overflow-y:auto; display:flex; flex-direction:column; gap:0.6rem; padding-right:5px;">
                     <!-- Results populated dynamically via JS -->
                 </div>
             </div>
-            <div class="modal-footer" style="padding:1rem 2rem; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+            <div class="modal-footer"
+                style="padding:1rem 2rem; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
                 <span style="font-size:0.85rem; color:var(--text-muted);">Select up to 3 programs to compare</span>
-                <button id="quick-launch-compare-btn" class="compare-action-btn" style="padding:0.6rem 1.2rem; font-size:0.9rem; display:none;">
+                <button id="quick-launch-compare-btn" class="compare-action-btn"
+                    style="padding:0.6rem 1.2rem; font-size:0.9rem; display:none;">
                     Compare Now 📊
                 </button>
             </div>
@@ -193,4 +237,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>
