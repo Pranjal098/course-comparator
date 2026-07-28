@@ -135,6 +135,15 @@ h1 {
     gap: 1rem;
     margin-bottom: 2rem;
     flex-wrap: wrap;
+    position: sticky;
+    top: 1rem;
+    z-index: 99;
+    background: rgba(11, 15, 25, 0.8);
+    backdrop-filter: blur(16px);
+    padding: 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
 }
 
 .drawer-overlay {
