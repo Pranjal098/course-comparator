@@ -6,32 +6,46 @@
     --bg-card-hover: rgba(23, 33, 53, 0.85);
     --border-color: rgba(255, 255, 255, 0.08);
     --border-highlight: rgba(56, 189, 248, 0.3);
-    
+
     --primary: #38bdf8;
     --primary-glow: rgba(56, 189, 248, 0.15);
     --secondary: #a855f7;
     --accent: #10b981;
     --accent-red: #ef4444;
-    
+
     --text-main: #f3f4f6;
     --text-muted: #9ca3af;
     --text-dark: #1f2937;
-    
+
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Plus Jakarta Sans', sans-serif;
-    
+
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes popUp {
-    0% { opacity: 0; transform: translateY(30px) scale(0.95); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @keyframes slideInSidebar {
-    0% { opacity: 0; transform: translateX(-20px); }
-    100% { opacity: 1; transform: translateX(0); }
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 * {
@@ -46,7 +60,7 @@ body {
     font-family: var(--font-body);
     line-height: 1.6;
     overflow-x: hidden;
-    background-image: 
+    background-image:
         radial-gradient(at 10% 10%, rgba(168, 85, 247, 0.08) 0px, transparent 50%),
         radial-gradient(at 90% 10%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
         radial-gradient(at 50% 90%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
@@ -58,13 +72,16 @@ body {
     width: 8px;
     height: 8px;
 }
+
 ::-webkit-scrollbar-track {
     background: var(--bg-dark);
 }
+
 ::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary);
 }
@@ -189,14 +206,13 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 1.8rem;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     transition: right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .drawer-overlay.open .filters-sidebar {
     right: 0;
-}
 }
 
 .filter-group-title {
@@ -277,7 +293,7 @@ h1 {
     transition: var(--transition);
 }
 
-.custom-checkbox input:checked + .checkbox-box {
+.custom-checkbox input:checked+.checkbox-box {
     border-color: var(--primary);
     background-color: var(--primary);
     box-shadow: 0 0 8px var(--primary-glow);
@@ -292,7 +308,7 @@ h1 {
     transition: var(--transition);
 }
 
-.custom-checkbox input:checked + .checkbox-box::after {
+.custom-checkbox input:checked+.checkbox-box::after {
     opacity: 1;
 }
 
@@ -404,7 +420,7 @@ h1 {
     right: 0;
     bottom: 0;
     opacity: 0.15;
-    background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.4), transparent);
+    background-image: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.4), transparent);
 }
 
 .univ-badge {
@@ -727,7 +743,8 @@ h1 {
     text-align: left;
 }
 
-.comparison-table th, .comparison-table td {
+.comparison-table th,
+.comparison-table td {
     padding: 1.2rem;
     border-bottom: 1px solid var(--border-color);
 }
@@ -869,8 +886,15 @@ h1 {
 
 /* Keyframes */
 @keyframes popIn {
-    0% { transform: scale(0.8); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* Empty State */
@@ -883,7 +907,7 @@ h1 {
 .empty-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
-    color: rgba(255,255,255,0.1);
+    color: rgba(255, 255, 255, 0.1);
 }
 
 /* Responsive design */
@@ -895,9 +919,11 @@ h1 {
         padding: 1.2rem;
         align-items: stretch;
     }
+
     .tray-items {
         flex-wrap: wrap;
     }
+
     .roi-controls {
         grid-template-columns: 1fr;
     }
@@ -907,35 +933,56 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.8rem 1rem;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 12px;
-    transition: var(--transition-bounce);
+    padding: 0.85rem 1.1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    transition: var(--transition);
 }
 
 .quick-compare-item:hover {
-    background: rgba(56, 189, 248, 0.1);
-    border-color: rgba(56, 189, 248, 0.3);
-    transform: translateX(5px);
+    background: rgba(56, 189, 248, 0.08);
+    border-color: rgba(56, 189, 248, 0.25);
+    transform: translateX(3px);
+}
+
+.quick-compare-item.added {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.3);
 }
 
 .quick-add-btn {
-    background: var(--primary);
-    color: var(--bg-dark);
-    border: none;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--primary);
+    border: 1px solid var(--primary);
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-weight: 800;
+    width: 32px;
+    height: 32px;
+    font-size: 1.1rem;
+    font-weight: 700;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
     transition: var(--transition);
+    flex-shrink: 0;
 }
 
 .quick-add-btn:hover {
+    background: var(--primary);
+    color: var(--bg-dark);
     transform: scale(1.1);
-    box-shadow: 0 0 10px var(--primary);
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.quick-add-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.quick-add-btn.active:hover {
+    background: var(--accent-red);
+    border-color: var(--accent-red);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
 }
