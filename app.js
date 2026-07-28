@@ -2134,18 +2134,43 @@ function setupEventListeners() {
 // --- Quick Compare Modal Logic ---
 function setupQuickCompare() {
     const quickCompareBtn = document.getElementById('quick-compare-btn');
-    const quickModal = document.getElementById('quick-compare-modal');
+    if (!quickCompareBtn) return;
+
+    // Dynamically inject the modal so we don't rely on index.html updates
+    let quickModal = document.getElementById('quick-compare-modal');
+    if (!quickModal) {
+        quickModal = document.createElement('div');
+        quickModal.id = 'quick-compare-modal';
+        quickModal.className = 'comparison-modal';
+        quickModal.style.cssText = 'display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); align-items:center; justify-content:center;';
+        quickModal.innerHTML = `
+            <div class="modal-content" style="max-width:600px; width:90%; background:var(--bg-dark); border:1px solid var(--border-color); border-radius:24px; overflow:hidden;">
+                <div class="modal-header" style="padding:1.5rem 2rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                    <h3 class="modal-title" style="margin:0; font-family:var(--font-heading); color:#fff;">Search & Add to Compare</h3>
+                    <button id="close-quick-compare-btn" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:35px; height:35px; color:#fff; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:var(--transition);">&times;</button>
+                </div>
+                <div class="modal-body" style="padding:1.5rem 2rem; display:flex; flex-direction:column; gap:1.5rem;">
+                    <div class="search-input-wrapper" style="width:100%;">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="quick-compare-search" placeholder="Type university or course name..." style="width:100%; padding:0.8rem 0.8rem 0.8rem 2.5rem; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); border-radius:12px; color:#fff;">
+                    </div>
+                    <div id="quick-compare-results" style="max-height:350px; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:5px;">
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(quickModal);
+    }
+
     const closeQuickBtn = document.getElementById('close-quick-compare-btn');
     const searchInput = document.getElementById('quick-compare-search');
     const resultsContainer = document.getElementById('quick-compare-results');
 
-    if (!quickCompareBtn || !quickModal) return;
-
     function renderQuickResults(query = '') {
         const lowerQuery = query.toLowerCase();
         const filtered = courses.filter(c => 
-            c.university.toLowerCase().includes(lowerQuery) || 
-            c.title.toLowerCase().includes(lowerQuery)
+            (c.university && c.university.toLowerCase().includes(lowerQuery)) || 
+            (c.title && c.title.toLowerCase().includes(lowerQuery))
         );
 
         resultsContainer.innerHTML = filtered.map(course => {
@@ -2163,12 +2188,12 @@ function setupQuickCompare() {
             `;
         }).join('');
 
-        // Attach click listeners to the + buttons
+        // Attach click listeners
         resultsContainer.querySelectorAll('.quick-add-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const id = e.currentTarget.getAttribute('data-id');
                 toggleCompareCourse(id);
-                renderQuickResults(searchInput.value); // Re-render to update the ✓ state
+                renderQuickResults(searchInput.value);
             });
         });
     }
