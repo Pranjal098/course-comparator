@@ -2150,17 +2150,17 @@ function setupQuickCompare() {
 
         resultsContainer.innerHTML = filtered.map(course => {
             const isAdded = selectedCourses.some(sc => sc.id === course.id);
-            return \`
+            return `
                 <div class="quick-compare-item">
                     <div>
-                        <div style="font-weight:700; color:var(--primary); font-size:0.9rem;">\${course.university}</div>
-                        <div style="font-size:0.85rem; color:#fff;">\${course.title}</div>
+                        <div style="font-weight:700; color:var(--primary); font-size:0.9rem;">${course.university}</div>
+                        <div style="font-size:0.85rem; color:#fff;">${course.title}</div>
                     </div>
-                    <button class="quick-add-btn" data-id="\${course.id}" style="\${isAdded ? 'background:var(--accent); color:#fff;' : ''}">
-                        \${isAdded ? '✓' : '+'}
+                    <button class="quick-add-btn" data-id="${course.id}" style="${isAdded ? 'background:var(--accent); color:#fff;' : ''}">
+                        ${isAdded ? '✓' : '+'}
                     </button>
                 </div>
-            \`;
+            `;
         }).join('');
 
         // Attach click listeners to the + buttons
