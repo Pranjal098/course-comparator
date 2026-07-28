@@ -1756,6 +1756,7 @@ function parseCSV(text) {
                 else if (header === 'careersupport') course['careerSupport'] = val.toLowerCase() === 'true';
                 else if (header === 'brochureurl') course['brochureUrl'] = val;
                 else if (header === 'exampattern') course['examPattern'] = val;
+                else if (header === 'imagecolor') course['imageColor'] = val;
                 else course[header] = val;
             }
         });
