@@ -1833,7 +1833,7 @@ function resetAllFilters() {
     if (sortSelect) sortSelect.value = 'recommended';
 
     if (costSlider) costSlider.value = 700000;
-    if (costValueEl) costValueEl.textContent = 'â‚¹7,00,000';
+    if (costValueEl) costValueEl.textContent = '₹7,00,000';
 
     document.querySelectorAll('.filters-sidebar input[type="checkbox"]').forEach(cb => {
         cb.checked = false;
@@ -1957,10 +1957,10 @@ function renderCourses() {
     if (filtered.length === 0) {
         coursesGrid.innerHTML = `
             <div class="empty-state" style="grid-column: 1 / -1;">
-                <div class="empty-icon">ðŸ”</div>
+                <div class="empty-icon">🔍</div>
                 <h3>No courses found</h3>
                 <p>Try resetting some filters or tweaking your search terms.</p>
-                <button onclick="resetAllFilters()" class="compare-action-btn" style="margin-top:1rem; padding:0.6rem 1.5rem;">Reset All Filters ðŸ”„</button>
+                <button onclick="resetAllFilters()" class="compare-action-btn" style="margin-top:1rem; padding:0.6rem 1.5rem;">Reset All Filters 🔄</button>
             </div>
         `;
         return;
@@ -1983,7 +1983,7 @@ function renderCourses() {
                     <h3 class="course-title">${course.title}</h3>
                     
                     <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:0.25rem; margin-bottom:0.6rem;">
-                        <span>ðŸ“</span>
+                        <span>📍</span>
                         <span>${course.city || 'N/A'}, ${course.state || 'N/A'}</span>
                     </div>
 
@@ -2018,21 +2018,21 @@ function renderCourses() {
                             ${hasDiscount ? `
                                 <div style="display:flex; flex-direction:column;">
                                     <span style="text-decoration: line-through; font-size: 0.85rem; color: var(--text-muted); line-height:1;">
-                                        â‚¹${originalCost.toLocaleString('en-IN')}
+                                        ₹${originalCost.toLocaleString('en-IN')}
                                     </span>
                                     <span class="cost-amount" style="font-size:1.15rem;">
-                                        â‚¹${finalCost.toLocaleString('en-IN')} 
+                                        ₹${finalCost.toLocaleString('en-IN')} 
                                     </span>
                                 </div>
                             ` : `
-                                <span class="cost-amount" style="font-size:1.15rem;">â‚¹${finalCost.toLocaleString('en-IN')}</span>
+                                <span class="cost-amount" style="font-size:1.15rem;">₹${finalCost.toLocaleString('en-IN')}</span>
                             `}
-                            ${course.emi ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem; font-weight:600;">EMI from â‚¹${course.emi.toLocaleString('en-IN')}/mo</div>` : ''}
+                            ${course.emi ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem; font-weight:600;">EMI from ₹${course.emi.toLocaleString('en-IN')}/mo</div>` : ''}
                         </div>
                         
                         <div style="display:flex; gap:0.4rem;">
                             <a href="${course.brochureUrl || '#'}" target="_blank" class="compare-btn" style="text-decoration:none; padding: 0.5rem 0.6rem; border-color:rgba(255,255,255,0.15); color:var(--text-muted);" title="Download Syllabus Brochure">
-                                ðŸ“„
+                                📄
                             </a>
                             <button class="compare-btn ${isAdded ? 'active' : ''}" data-id="${course.id}">
                                 <span>${isAdded ? 'Selected' : 'Compare'}</span>
@@ -2276,7 +2276,7 @@ function renderComparisonMatrix() {
                     </tr>
                     <tr>
                         <td class="feature-label">Campus Location</td>
-                        ${cols.map(c => `<td>ðŸ“ <strong>${c.city || 'N/A'}, ${c.state || 'N/A'}</strong></td>`).join('')}
+                        ${cols.map(c => `<td>📍 <strong>${c.city || 'N/A'}, ${c.state || 'N/A'}</strong></td>`).join('')}
                     </tr>
                     <tr>
                         <td class="feature-label">Tuition Fee</td>
@@ -2289,10 +2289,10 @@ function renderComparisonMatrix() {
         return `<td class="${isBest ? 'highlight-best' : ''}">
                                 ${hasDiscount ? `
                                     <span style="text-decoration: line-through; font-size: 0.8rem; color: var(--text-muted);">
-                                        â‚¹${originalCost.toLocaleString('en-IN')}
+                                        ₹${originalCost.toLocaleString('en-IN')}
                                     </span><br>
                                 ` : ''}
-                                <strong>â‚¹${effectiveCost.toLocaleString('en-IN')}</strong>
+                                <strong>₹${effectiveCost.toLocaleString('en-IN')}</strong>
                                 ${hasDiscount ? `<span style="font-size:0.75rem; color:var(--accent); font-weight:700;"> (-${c.discountPercent}%)</span>` : ''}
                                 ${isBest ? '<div style="font-size:0.75rem; color:var(--accent); font-weight:bold; margin-top:4px;">Best Price</div>' : ''}
                             </td>`;
@@ -2303,14 +2303,14 @@ function renderComparisonMatrix() {
                         ${cols.map(c => `
                             <td>
                                 <ul style="list-style:none; padding:0; margin:0; font-size:0.75rem; color:var(--text-muted);">
-                                    ${c.otp > 0 ? `<li style="margin-bottom:2px;"><strong style="color:#fff;">OTP:</strong> â‚¹${c.otp.toLocaleString('en-IN')}</li>` : ''}
-                                    ${c.sem1 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 1:</strong> â‚¹${c.sem1.toLocaleString('en-IN')}</li>` : ''}
-                                    ${c.sem2 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 2:</strong> â‚¹${c.sem2.toLocaleString('en-IN')}</li>` : ''}
-                                    ${c.sem3 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 3:</strong> â‚¹${c.sem3.toLocaleString('en-IN')}</li>` : ''}
-                                    ${c.sem4 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 4:</strong> â‚¹${c.sem4.toLocaleString('en-IN')}</li>` : ''}
-                                    ${c.sem5 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 5:</strong> â‚¹${c.sem5.toLocaleString('en-IN')}</li>` : ''}
-                                    ${c.sem6 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 6:</strong> â‚¹${c.sem6.toLocaleString('en-IN')}</li>` : ''}
-                                    ${c.emi > 0 ? `<li style="margin-top:4px; padding-top:4px; border-top:1px solid rgba(255,255,255,0.1);"><strong style="color:var(--primary);">EMI Options:</strong> â‚¹${c.emi.toLocaleString('en-IN')}/mo</li>` : ''}
+                                    ${c.otp > 0 ? `<li style="margin-bottom:2px;"><strong style="color:#fff;">OTP:</strong> ₹${c.otp.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem1 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 1:</strong> ₹${c.sem1.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem2 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 2:</strong> ₹${c.sem2.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem3 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 3:</strong> ₹${c.sem3.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem4 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 4:</strong> ₹${c.sem4.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem5 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 5:</strong> ₹${c.sem5.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.sem6 > 0 ? `<li style="margin-bottom:2px;"><strong>Sem 6:</strong> ₹${c.sem6.toLocaleString('en-IN')}</li>` : ''}
+                                    ${c.emi > 0 ? `<li style="margin-top:4px; padding-top:4px; border-top:1px solid rgba(255,255,255,0.1);"><strong style="color:var(--primary);">EMI Options:</strong> ₹${c.emi.toLocaleString('en-IN')}/mo</li>` : ''}
                                 </ul>
                             </td>
                         `).join('')}
@@ -2374,7 +2374,7 @@ function setupRoiCalculator() {
         const currentSalary = parseInt(salarySlider.value);
         const hikePercent = parseInt(hikeSlider.value);
 
-        salaryVal.textContent = `â‚¹${currentSalary.toLocaleString('en-IN')}`;
+        salaryVal.textContent = `₹${currentSalary.toLocaleString('en-IN')}`;
         hikeVal.textContent = `${hikePercent}%`;
 
         const salaryIncrease = currentSalary * (hikePercent / 100);
@@ -2396,7 +2396,7 @@ function setupRoiCalculator() {
                     </div>
                     <div style="margin-top:0.4rem;">
                         <span class="metric-label" style="font-size: 0.7rem;">5-Yr Net Gain</span>
-                        <div class="roi-stat-num" style="color:#fff;">â‚¹${fiveYearProfit.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+                        <div class="roi-stat-num" style="color:#fff;">₹${fiveYearProfit.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
                     </div>
                 </div>
             `;
