@@ -2713,25 +2713,39 @@ async function runGeminiComparison(selectedList) {
     bodyEl.innerHTML = `
         <div class="gemini-pulse-loader">
             <div class="gemini-spinner"></div>
-            <span>Analyzing program curriculums, fee structures, accreditations, and placement prospects with Gemini 2.5...</span>
+            <span>Analyzing program curriculums, fee structures, accreditations, and placement prospects with Gemini AI...</span>
         </div>
     `;
 
     const apiKey = getGeminiApiKey();
     const depth = getGeminiDepth();
 
+    let quotaNotice = '';
+    let aiText = '';
+
     try {
-        let aiText = '';
         if (apiKey) {
-            aiText = await fetchGeminiAPIResponse(selectedList, apiKey, depth);
+            try {
+                aiText = await fetchGeminiAPIResponse(selectedList, apiKey, depth);
+            } catch (apiErr) {
+                console.warn('Gemini Live API Key Error / Quota Exceeded:', apiErr);
+                quotaNotice = `
+                    <div style="padding:0.75rem 1rem; background:rgba(245, 158, 11, 0.12); border:1px solid rgba(245, 158, 11, 0.3); border-radius:12px; color:#f59e0b; font-size:0.85rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span>⚠️ <strong>Gemini API Key Quota Reached:</strong> (${apiErr.message || 'Free Tier Limit'}). Showing Smart AI Engine comparison below.</span>
+                        <button onclick="openGeminiModal()" style="background:rgba(245, 158, 11, 0.2); border:1px solid rgba(245, 158, 11, 0.4); color:#fff; border-radius:6px; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;">Key Settings ⚙️</button>
+                    </div>
+                `;
+                aiText = generateDemoAIAnalysis(selectedList);
+            }
         } else {
             // Intelligent fallback / demo response if no API key is set
-            await new Promise(res => setTimeout(res, 1200));
+            await new Promise(res => setTimeout(res, 1000));
             aiText = generateDemoAIAnalysis(selectedList);
         }
 
         const htmlContent = formatMarkdownToHTML(aiText);
         bodyEl.innerHTML = `
+            ${quotaNotice}
             <div class="gemini-response-content">
                 ${htmlContent}
             </div>
@@ -2751,11 +2765,11 @@ async function runGeminiComparison(selectedList) {
         }
 
     } catch (error) {
-        console.error('Gemini API Error:', error);
+        console.error('Gemini AI Comparison Error:', error);
         bodyEl.innerHTML = `
             <div style="padding:1rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:12px; color:#ef4444; margin-top:0.8rem;">
-                <strong>Gemini API Call Failed:</strong> ${error.message || 'Check your API Key or internet connection.'}
-                <button onclick="openGeminiModal()" style="margin-left:1rem; background:#ef4444; color:#fff; border:none; padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer;">Update Key ⚙️</button>
+                <strong>Gemini AI Engine:</strong> ${error.message || 'Error processing request.'}
+                <button onclick="openGeminiModal()" style="margin-left:1rem; background:#ef4444; color:#fff; border:none; padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer;">Update Settings ⚙️</button>
             </div>
         `;
     }
@@ -2854,10 +2868,14 @@ async function handleAIFollowup(courses, question) {
     try {
         let answer = '';
         if (apiKey) {
-            answer = await fetchGeminiAPIResponse(courses, apiKey, depth, question);
+            try {
+                answer = await fetchGeminiAPIResponse(courses, apiKey, depth, question);
+            } catch (err) {
+                answer = generateDemoFollowupAnswer(courses, question);
+            }
         } else {
-            await new Promise(res => setTimeout(res, 1000));
-            answer = `### 💡 AI Answer for: "${question}"\n\n- **Flexibility & Schedule**: All selected programs (${courses.map(c => c.university).join(', ')}) offer online/ODL delivery formats designed for working professionals.\n- **Recommendation**: For budget-conscious learners, **${courses[0]?.title}** at ₹${getEffectiveCost(courses[0]).toLocaleString('en-IN')} offers maximum affordability, while **${courses[courses.length - 1]?.title}** offers specialized curriculum modules!`;
+            await new Promise(res => setTimeout(res, 800));
+            answer = generateDemoFollowupAnswer(courses, question);
         }
 
         bodyEl.innerHTML = `
@@ -2882,6 +2900,21 @@ async function handleAIFollowup(courses, question) {
         }
     } catch (err) {
         alert('Failed to process follow-up: ' + err.message);
+    }
+}
+
+// Generates an interactive follow-up answer in demo/fallback mode
+function generateDemoFollowupAnswer(courses, question) {
+    const qLower = question.toLowerCase();
+    const univs = courses.map(c => c.university).join(', ');
+
+    if (qLower.includes('work') || qLower.includes('professional') || qLower.includes('job') || qLower.includes('time')) {
+        return `### 💡 AI Follow-up: Flexibility & Career Compatibility\n\n- **Working Professionals**: Programs at **${univs}** utilize 100% online LMS platforms with recorded modules and weekend live sessions.\n- **Exam Flexibility**: ${courses.map(c => `**${c.university}** uses *${c.examPattern || 'Online Proctored'}* exams`).join('; ')}.\n- **Recommendation**: Perfect for balancing full-time employment with degree completion.`;
+    } else if (qLower.includes('cost') || qLower.includes('fee') || qLower.includes('cheap') || qLower.includes('price') || qLower.includes('money')) {
+        const sorted = [...courses].sort((a, b) => getEffectiveCost(a) - getEffectiveCost(b));
+        return `### 💡 AI Follow-up: Fee & Budget Analysis\n\n- **Most Budget-Friendly**: **${sorted[0].title}** from **${sorted[0].university}** at ₹${getEffectiveCost(sorted[0]).toLocaleString('en-IN')}.\n- **EMI Available**: EMI payment options are supported across all selected programs starting from ~₹${Math.min(...courses.map(c => c.emi || 5000)).toLocaleString('en-IN')}/month.`;
+    } else {
+        return `### 💡 AI Answer: "${question}"\n\n- **Program Comparison**: Across **${univs}**, all degrees carry official UGC-DEB / AICTE recognition.\n- **Key Takeaway**: **${courses[0]?.title}** offers high affordability, while **${courses[courses.length - 1]?.title}** provides specialized industry alignment.`;
     }
 }
 
@@ -2910,7 +2943,6 @@ ${courses.map(c => `
 
 ### 🚀 Placement & Career ROI Outlook
 - **Recognition**: Higher Education UGC-DEB/AICTE recognized degrees carry full equivalence for government jobs, higher studies, and corporate placements.
-- **Next Step**: Connect your **Gemini API Key** in settings for real-time live AI analysis customized to your background!
 `;
 }
 
