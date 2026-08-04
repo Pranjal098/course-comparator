@@ -2761,9 +2761,9 @@ async function runGeminiComparison(selectedList) {
     }
 }
 
-// Call Google Gemini REST API Endpoint (Supports gemini-2.0-flash & gemini-1.5-flash)
+// Call Google Gemini REST API Endpoint (Supports gemini-1.5-flash & gemini-2.0-flash)
 async function fetchGeminiAPIResponse(courses, apiKey, depth, customQuestion = '') {
-    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash'];
+    const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash'];
 
     const coursesData = courses.map(c => ({
         title: c.title,
