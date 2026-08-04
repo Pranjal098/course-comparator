@@ -2255,7 +2255,29 @@ function renderComparisonMatrix() {
 
     const cols = selectedCourses;
 
-    let html = `
+    // --- ✨ GEMINI AI SECTION ---
+    let aiContainerHtml = `
+        <div class="gemini-ai-card" id="gemini-ai-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span class="gemini-badge">✨ Gemini Flash</span>
+                    <h3 style="margin:0; font-family:var(--font-heading); color:#fff; font-size:1.15rem;">AI Program Insight & Comparison</h3>
+                </div>
+                <div style="display:flex; gap:0.6rem; align-items:center;">
+                    <button id="configure-gemini-key-btn" style="background:rgba(255,255,255,0.06); border:1px solid var(--border-color); color:var(--text-muted); padding:0.4rem 0.8rem; border-radius:10px; font-size:0.8rem; cursor:pointer;">⚙️ Key Settings</button>
+                    <button id="generate-ai-insight-btn" class="compare-action-btn" style="padding:0.45rem 1rem; font-size:0.85rem; background:linear-gradient(135deg, #a855f7, #38bdf8);">Generate AI Analysis ✨</button>
+                </div>
+            </div>
+            
+            <div id="gemini-ai-body">
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.8rem; margin-bottom:0;">
+                    Click <strong>"Generate AI Analysis ✨"</strong> to get instant side-by-side strengths, trade-offs, career outcomes, and tailored guidance for these programs.
+                </p>
+            </div>
+        </div>
+    `;
+
+    let html = aiContainerHtml + `
         <div class="comparison-table-wrapper">
             <table class="comparison-table">
                 <thead>
@@ -2287,15 +2309,15 @@ function renderComparisonMatrix() {
         const hasDiscount = c.discountPercent > 0;
 
         return `<td class="${isBest ? 'highlight-best' : ''}">
-                                ${hasDiscount ? `
-                                    <span style="text-decoration: line-through; font-size: 0.8rem; color: var(--text-muted);">
-                                        ₹${originalCost.toLocaleString('en-IN')}
-                                    </span><br>
-                                ` : ''}
-                                <strong>₹${effectiveCost.toLocaleString('en-IN')}</strong>
-                                ${hasDiscount ? `<span style="font-size:0.75rem; color:var(--accent); font-weight:700;"> (-${c.discountPercent}%)</span>` : ''}
-                                ${isBest ? '<div style="font-size:0.75rem; color:var(--accent); font-weight:bold; margin-top:4px;">Best Price</div>' : ''}
-                            </td>`;
+                                 ${hasDiscount ? `
+                                     <span style="text-decoration: line-through; font-size: 0.8rem; color: var(--text-muted);">
+                                         ₹${originalCost.toLocaleString('en-IN')}
+                                     </span><br>
+                                 ` : ''}
+                                 <strong>₹${effectiveCost.toLocaleString('en-IN')}</strong>
+                                 ${hasDiscount ? `<span style="font-size:0.75rem; color:var(--accent); font-weight:700;"> (-${c.discountPercent}%)</span>` : ''}
+                                 ${isBest ? '<div style="font-size:0.75rem; color:var(--accent); font-weight:bold; margin-top:4px;">Best Price</div>' : ''}
+                             </td>`;
     }).join('')}
                     </tr>
                     <tr>
@@ -2320,9 +2342,9 @@ function renderComparisonMatrix() {
                         ${cols.map(c => {
         const isBest = c.durationWeeks === minWeeks;
         return `<td class="${isBest ? 'highlight-best' : ''}">
-                                ${c.duration} (${c.durationWeeks} weeks)
-                                ${isBest ? '<div style="font-size:0.75rem; color:var(--accent); font-weight:bold; margin-top:4px;">Shortest Program</div>' : ''}
-                            </td>`;
+                                 ${c.duration} (${c.durationWeeks} weeks)
+                                 ${isBest ? '<div style="font-size:0.75rem; color:var(--accent); font-weight:bold; margin-top:4px;">Shortest Program</div>' : ''}
+                             </td>`;
     }).join('')}
                     </tr>
                     <tr>
@@ -2358,6 +2380,16 @@ function renderComparisonMatrix() {
 
     modalContentBody.innerHTML = html;
     setupRoiCalculator();
+
+    // Attach Gemini AI handlers inside modal
+    const generateBtn = document.getElementById('generate-ai-insight-btn');
+    const keyConfigBtn = document.getElementById('configure-gemini-key-btn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', () => runGeminiComparison(selectedCourses));
+    }
+    if (keyConfigBtn) {
+        keyConfigBtn.addEventListener('click', openGeminiModal);
+    }
 }
 
 // Setup and handle ROI Calculations
@@ -2563,6 +2595,323 @@ async function init() {
     renderActiveFilterChips();
     renderCourses();
     setupEventListeners();
+    setupGeminiModalEvents();
+}
+
+// --- ✨ GEMINI AI SERVICE MODULE ---
+
+function getGeminiApiKey() {
+    return localStorage.getItem('GEMINI_API_KEY') || '';
+}
+
+function getGeminiDepth() {
+    return localStorage.getItem('GEMINI_DEPTH') || 'balanced';
+}
+
+function setupGeminiModalEvents() {
+    const geminiSettingsBtn = document.getElementById('gemini-settings-btn');
+    const geminiModal = document.getElementById('gemini-modal');
+    const closeGeminiModalBtn = document.getElementById('close-gemini-modal-btn');
+    const saveKeyBtn = document.getElementById('save-gemini-key-btn');
+    const clearKeyBtn = document.getElementById('clear-gemini-key-btn');
+    const keyInput = document.getElementById('gemini-api-key');
+    const depthSelect = document.getElementById('gemini-model-depth');
+    const statusDiv = document.getElementById('gemini-key-status');
+
+    if (!geminiSettingsBtn || !geminiModal) return;
+
+    geminiSettingsBtn.addEventListener('click', openGeminiModal);
+
+    if (closeGeminiModalBtn) {
+        closeGeminiModalBtn.addEventListener('click', () => geminiModal.classList.remove('open'));
+    }
+
+    geminiModal.addEventListener('click', (e) => {
+        if (e.target === geminiModal) geminiModal.classList.remove('open');
+    });
+
+    if (saveKeyBtn) {
+        saveKeyBtn.addEventListener('click', () => {
+            const key = keyInput.value.trim();
+            const depth = depthSelect.value;
+            if (key) {
+                localStorage.setItem('GEMINI_API_KEY', key);
+            } else {
+                localStorage.removeItem('GEMINI_API_KEY');
+            }
+            localStorage.setItem('GEMINI_DEPTH', depth);
+
+            if (statusDiv) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = 'rgba(16, 185, 129, 0.15)';
+                statusDiv.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                statusDiv.style.color = '#10b981';
+                statusDiv.textContent = key ? '✓ Settings & API Key saved successfully!' : '✓ Settings saved (Demo Mode enabled).';
+            }
+
+            setTimeout(() => {
+                geminiModal.classList.remove('open');
+                if (statusDiv) statusDiv.style.display = 'none';
+            }, 1200);
+        });
+    }
+
+    if (clearKeyBtn) {
+        clearKeyBtn.addEventListener('click', () => {
+            localStorage.removeItem('GEMINI_API_KEY');
+            if (keyInput) keyInput.value = '';
+            if (statusDiv) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = 'rgba(239, 68, 68, 0.15)';
+                statusDiv.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                statusDiv.style.color = '#ef4444';
+                statusDiv.textContent = 'API Key cleared. Reverted to Demo Mode.';
+            }
+        });
+    }
+}
+
+function openGeminiModal() {
+    const geminiModal = document.getElementById('gemini-modal');
+    const keyInput = document.getElementById('gemini-api-key');
+    const depthSelect = document.getElementById('gemini-model-depth');
+    if (!geminiModal) return;
+
+    if (keyInput) keyInput.value = getGeminiApiKey();
+    if (depthSelect) depthSelect.value = getGeminiDepth();
+    geminiModal.classList.add('open');
+}
+
+// Convert raw Markdown text from Gemini to structured HTML
+function formatMarkdownToHTML(text) {
+    if (!text) return '';
+    let formatted = text
+        .replace(/### (.*?)\n/g, '<h3>$1</h3>')
+        .replace(/## (.*?)\n/g, '<h3>$1</h3>')
+        .replace(/# (.*?)\n/g, '<h3>$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^\s*[\-\*]\s+(.*)$/gm, '<li>$1</li>')
+        .replace(/\n\n/g, '<br><br>');
+
+    // Wrap continuous <li> elements in <ul>
+    formatted = formatted.replace(/(<li>.*?<\/li>\s*)+/gs, '<ul>$&</ul>');
+    return formatted;
+}
+
+// Core function to trigger Gemini AI comparison
+async function runGeminiComparison(selectedList) {
+    const bodyEl = document.getElementById('gemini-ai-body');
+    if (!bodyEl) return;
+
+    if (!selectedList || selectedList.length === 0) {
+        bodyEl.innerHTML = `<p style="color:#ef4444;">Please select at least 1 program to analyze.</p>`;
+        return;
+    }
+
+    // Loader Shimmer State
+    bodyEl.innerHTML = `
+        <div class="gemini-pulse-loader">
+            <div class="gemini-spinner"></div>
+            <span>Analyzing program curriculums, fee structures, accreditations, and placement prospects with Gemini 2.5...</span>
+        </div>
+    `;
+
+    const apiKey = getGeminiApiKey();
+    const depth = getGeminiDepth();
+
+    try {
+        let aiText = '';
+        if (apiKey) {
+            aiText = await fetchGeminiAPIResponse(selectedList, apiKey, depth);
+        } else {
+            // Intelligent fallback / demo response if no API key is set
+            await new Promise(res => setTimeout(res, 1200));
+            aiText = generateDemoAIAnalysis(selectedList);
+        }
+
+        const htmlContent = formatMarkdownToHTML(aiText);
+        bodyEl.innerHTML = `
+            <div class="gemini-response-content">
+                ${htmlContent}
+            </div>
+            <div class="ai-qa-box">
+                <input type="text" id="ai-followup-input" class="ai-qa-input" placeholder="Ask a follow-up question (e.g. 'Which one is better for working professionals?')...">
+                <button id="ai-followup-btn" class="compare-action-btn" style="padding:0.5rem 1.2rem; font-size:0.85rem; background:var(--primary); color:var(--bg-dark);">Ask AI ✨</button>
+            </div>
+        `;
+
+        const followupBtn = document.getElementById('ai-followup-btn');
+        const followupInput = document.getElementById('ai-followup-input');
+        if (followupBtn && followupInput) {
+            followupBtn.addEventListener('click', () => handleAIFollowup(selectedList, followupInput.value.trim()));
+            followupInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleAIFollowup(selectedList, followupInput.value.trim());
+            });
+        }
+
+    } catch (error) {
+        console.error('Gemini API Error:', error);
+        bodyEl.innerHTML = `
+            <div style="padding:1rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:12px; color:#ef4444; margin-top:0.8rem;">
+                <strong>Gemini API Call Failed:</strong> ${error.message || 'Check your API Key or internet connection.'}
+                <button onclick="openGeminiModal()" style="margin-left:1rem; background:#ef4444; color:#fff; border:none; padding:0.3rem 0.7rem; border-radius:6px; cursor:pointer;">Update Key ⚙️</button>
+            </div>
+        `;
+    }
+}
+
+// Call Google Gemini REST API Endpoint (Supports gemini-2.0-flash & gemini-1.5-flash)
+async function fetchGeminiAPIResponse(courses, apiKey, depth, customQuestion = '') {
+    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash'];
+
+    const coursesData = courses.map(c => ({
+        title: c.title,
+        university: c.university,
+        cost: `INR ${getEffectiveCost(c)}`,
+        duration: c.duration,
+        category: c.category,
+        eligibility: c.eligibility,
+        accreditations: (c.approvals || []).join(', '),
+        deliveryType: c.type,
+        examPattern: c.examPattern,
+        syllabusSample: (c.syllabus || []).join(', ')
+    }));
+
+    const promptText = `
+You are an expert higher education counselor and curriculum analyst.
+Compare the following ${courses.length} higher education online programs for a prospective student in India:
+
+${JSON.stringify(coursesData, null, 2)}
+
+${customQuestion ? `Specific User Question: "${customQuestion}"` : ''}
+
+Analysis Mode: ${depth.toUpperCase()}
+
+Please provide a well-structured markdown report with:
+### 1. Executive Summary & Best Fit
+Which student profile should choose which program and why.
+
+### 2. Key Program Strengths & Trade-offs
+Side-by-side analysis of curriculum quality, accreditation value, cost efficiency, and flexibility.
+
+### 3. Career & ROI Outlook
+Expected industry recognition, placement utility, and long-term value of these degrees.
+
+Keep the tone professional, insightful, neutral, and encouraging. Use bold bullet points.
+`;
+
+    let lastError = null;
+
+    for (const modelName of modelsToTry) {
+        try {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: promptText }] }]
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) return text;
+            } else {
+                const errJson = await response.json().catch(() => ({}));
+                lastError = new Error(errJson.error?.message || `HTTP ${response.status} for model ${modelName}`);
+            }
+        } catch (err) {
+            lastError = err;
+        }
+    }
+
+    throw lastError || new Error('Failed to generate response from Gemini API.');
+}
+
+// Handle interactive follow-up question
+async function handleAIFollowup(courses, question) {
+    if (!question) return;
+    const bodyEl = document.getElementById('gemini-ai-body');
+    if (!bodyEl) return;
+
+    const apiKey = getGeminiApiKey();
+    const depth = getGeminiDepth();
+
+    const previousContent = bodyEl.querySelector('.gemini-response-content')?.innerHTML || '';
+
+    bodyEl.innerHTML = `
+        <div class="gemini-response-content" style="opacity:0.6;">
+            ${previousContent}
+        </div>
+        <div class="gemini-pulse-loader">
+            <div class="gemini-spinner"></div>
+            <span>Gemini is answering: "${question}"...</span>
+        </div>
+    `;
+
+    try {
+        let answer = '';
+        if (apiKey) {
+            answer = await fetchGeminiAPIResponse(courses, apiKey, depth, question);
+        } else {
+            await new Promise(res => setTimeout(res, 1000));
+            answer = `### 💡 AI Answer for: "${question}"\n\n- **Flexibility & Schedule**: All selected programs (${courses.map(c => c.university).join(', ')}) offer online/ODL delivery formats designed for working professionals.\n- **Recommendation**: For budget-conscious learners, **${courses[0]?.title}** at ₹${getEffectiveCost(courses[0]).toLocaleString('en-IN')} offers maximum affordability, while **${courses[courses.length - 1]?.title}** offers specialized curriculum modules!`;
+        }
+
+        bodyEl.innerHTML = `
+            <div class="gemini-response-content">
+                ${previousContent}
+                <hr style="border:0; border-top:1px solid rgba(168, 85, 247, 0.3); margin:1.5rem 0;">
+                ${formatMarkdownToHTML(answer)}
+            </div>
+            <div class="ai-qa-box">
+                <input type="text" id="ai-followup-input" class="ai-qa-input" placeholder="Ask another follow-up question...">
+                <button id="ai-followup-btn" class="compare-action-btn" style="padding:0.5rem 1.2rem; font-size:0.85rem; background:var(--primary); color:var(--bg-dark);">Ask AI ✨</button>
+            </div>
+        `;
+
+        const followupBtn = document.getElementById('ai-followup-btn');
+        const followupInput = document.getElementById('ai-followup-input');
+        if (followupBtn && followupInput) {
+            followupBtn.addEventListener('click', () => handleAIFollowup(courses, followupInput.value.trim()));
+            followupInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleAIFollowup(courses, followupInput.value.trim());
+            });
+        }
+    } catch (err) {
+        alert('Failed to process follow-up: ' + err.message);
+    }
+}
+
+// Fallback intelligent response generator for keyless demo testing
+function generateDemoAIAnalysis(courses) {
+    const titles = courses.map(c => c.title);
+    const univs = courses.map(c => c.university);
+    const costs = courses.map(c => getEffectiveCost(c));
+
+    let bestBudgetIndex = 0;
+    for (let i = 1; i < costs.length; i++) {
+        if (costs[i] < costs[bestBudgetIndex]) bestBudgetIndex = i;
+    }
+
+    return `
+### 💡 Executive AI Recommendation
+- **Best Overall Value**: **${courses[bestBudgetIndex].title}** from **${courses[bestBudgetIndex].university}** stands out with a competitive tuition of **₹${costs[bestBudgetIndex].toLocaleString('en-IN')}** and strong accreditation backing (${(courses[bestBudgetIndex].approvals || []).join(', ')}).
+- **Curriculum Rigor**: ${univs.join(' and ')} both provide industry-aligned coursework with emphasis on practical skill-building.
+
+### ⚖️ Side-by-Side Strengths & Trade-offs
+${courses.map(c => `
+- **${c.university} (${c.title})**:
+  - *Strengths*: ${c.approvals ? c.approvals.join('/') + ' approved' : 'Accredited'}, ${c.type}, ${c.examPattern} exam pattern.
+  - *Consideration*: Total cost of ₹${getEffectiveCost(c).toLocaleString('en-IN')} across ${c.duration}.
+`).join('')}
+
+### 🚀 Placement & Career ROI Outlook
+- **Recognition**: Higher Education UGC-DEB/AICTE recognized degrees carry full equivalence for government jobs, higher studies, and corporate placements.
+- **Next Step**: Connect your **Gemini API Key** in settings for real-time live AI analysis customized to your background!
+`;
 }
 
 // Execute Init

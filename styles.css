@@ -1041,3 +1041,145 @@ h1 {
     background: #ef4444;
     color: #fff;
 }
+
+/* Gemini AI Integration Styles */
+.gemini-ai-card {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(56, 189, 248, 0.08));
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    border-radius: 20px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.15);
+}
+
+.gemini-ai-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #a855f7, #38bdf8, #10b981);
+    animation: shimmer 3s infinite linear;
+}
+
+@keyframes shimmer {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.gemini-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(56, 189, 248, 0.2));
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    color: #e0e7ff;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.gemini-response-content {
+    color: #f3f4f6;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-top: 1rem;
+}
+
+.gemini-response-content h3 {
+    color: #38bdf8;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    margin-top: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.gemini-response-content h4 {
+    color: #a855f7;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
+}
+
+.gemini-response-content ul {
+    margin-left: 1.2rem;
+    margin-bottom: 0.8rem;
+}
+
+.gemini-response-content li {
+    margin-bottom: 0.3rem;
+}
+
+.gemini-response-content strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+.gemini-pulse-loader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.gemini-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(168, 85, 247, 0.2);
+    border-top: 3px solid #a855f7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.ai-qa-box {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ai-qa-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.7rem 1rem;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}
+
+.ai-qa-input:focus {
+    outline: none;
+    border-color: #a855f7;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}

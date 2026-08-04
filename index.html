@@ -48,6 +48,10 @@
                         <option value="title-asc" style="background:var(--bg-dark);">Title: A to Z</option>
                     </select>
                 </div>
+                <button id="gemini-settings-btn" class="compare-btn"
+                    style="background:linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(56, 189, 248, 0.15)); border:1px solid rgba(168, 85, 247, 0.4); backdrop-filter:blur(10px); padding:0.8rem 1.2rem; color:#e0e7ff;">
+                    <span style="font-size:0.95rem; font-weight:700;">✨ Gemini AI Key</span>
+                </button>
                 <button id="quick-compare-btn" class="compare-btn"
                     style="background:rgba(56, 189, 248, 0.1); backdrop-filter:blur(10px); padding:0.8rem 1.2rem; color:var(--primary); border-color:var(--primary);">
                     <span style="font-size:0.95rem; font-weight:700;">⚖️ Quick Compare</span>
@@ -231,6 +235,60 @@
                     style="padding:0.6rem 1.2rem; font-size:0.9rem; display:none;">
                     Compare Now 📊
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gemini API Key Modal -->
+    <div class="comparison-modal" id="gemini-modal">
+        <div class="modal-content" style="max-width:550px; width:90%;">
+            <div class="modal-header"
+                style="background:linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(56, 189, 248, 0.2));">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="font-size:1.4rem;">✨</span>
+                    <h3 class="modal-title" style="margin:0;">Gemini AI Settings</h3>
+                </div>
+                <button id="close-gemini-modal-btn" class="close-modal-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:1.2rem; padding:1.5rem 2rem;">
+                <p style="color:var(--text-muted); font-size:0.9rem; margin:0; line-height:1.5;">
+                    Connect your <strong>Google Gemini API Key</strong> to enable deep AI program analysis, side-by-side
+                    strengths & trade-offs, and custom course advice.
+                </p>
+
+                <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                    <label for="gemini-api-key"
+                        style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Gemini API Key</label>
+                    <input type="password" id="gemini-api-key" placeholder="AIzaSy..."
+                        style="width:100%; padding:0.75rem 1rem; border-radius:10px; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:#fff; font-family:monospace;">
+                    <span style="font-size:0.78rem; color:var(--text-muted);">
+                        Key is stored locally in your browser (`localStorage`). Don't have a key?
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                            style="color:var(--primary); text-decoration:underline;">Get a free API key from Google AI
+                            Studio</a>.
+                    </span>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+                    <label style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Analysis Depth</label>
+                    <select id="gemini-model-depth"
+                        style="width:100%; padding:0.65rem 1rem; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-dark); color:#fff; font-family:var(--font-body);">
+                        <option value="balanced">Balanced (Pros, Cons, ROI & Best Fit)</option>
+                        <option value="detailed">Deep Dive (Detailed Syllabus, Faculty & Placement Focus)</option>
+                        <option value="concise">Quick Summary (Bullets & Final Verdict)</option>
+                    </select>
+                </div>
+
+                <div id="gemini-key-status"
+                    style="display:none; padding:0.6rem 0.9rem; border-radius:8px; font-size:0.85rem;"></div>
+            </div>
+            <div class="modal-footer"
+                style="padding:1rem 2rem; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+                <button id="clear-gemini-key-btn"
+                    style="background:transparent; border:none; color:var(--text-muted); font-size:0.85rem; cursor:pointer; text-decoration:underline;">Clear
+                    Key</button>
+                <button id="save-gemini-key-btn" class="compare-action-btn"
+                    style="padding:0.6rem 1.4rem; font-size:0.9rem;">Save Settings ✨</button>
             </div>
         </div>
     </div>
